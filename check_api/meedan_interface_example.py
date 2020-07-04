@@ -10,24 +10,28 @@ from gql.transport.requests import RequestsHTTPTransport
 from backend.ml.meedan_interface.utils import first_n_lines
 
 
-headers = {"X-Check-Token": os.environ.get('MEEDAN_KEY'), "Content-Type": 'application/json'}
+headers = {
+    "X-Check-Token": os.environ.get('MEEDAN_KEY'), "Content-Type": 'application/json'}
 
 # Instantiate client for requests made on the graphQL
-def init_meedan_client(fetch_schema = False, headers = headers):
+
+
+def init_meedan_client(fetch_schema=False, headers=headers):
     if headers['X-Check-Token'] is None:
         meedan_key = os.environ.get('MEEDAN_KEY')
         if meedan_key is None:
             print('WARNING: COULD NOT LOAD MEEDAN KEY, QUERIES WILL FAIL')
 
-    gql_transport=RequestsHTTPTransport(
+    gql_transport = RequestsHTTPTransport(
         url='https://check-api.checkmedia.org/api/graphql',
         headers=headers,
     )
     meedan_client = gql.Client(
         transport=gql_transport,
-        fetch_schema_from_transport=fetch_schema, # increases loading time
+        fetch_schema_from_transport=fetch_schema,  # increases loading time
     )
     return meedan_client
+
 
 gql_client = init_meedan_client()
 
@@ -35,7 +39,7 @@ gql_client = init_meedan_client()
 # Send a query_string to the graphQL server
 # This function implements two different method (through gql or requests) that same thing
 # because there was a weird bug with certain queries
-def meedan_query(query_string, gql_client = gql_client, headers = headers, method='gql'):
+def meedan_query(query_string, gql_client=gql_client, headers=headers, method='gql'):
     if method == 'gql':
         if gql_client is None:
             gql_client = init_meedan_client(fetch_schema=False)
@@ -46,15 +50,18 @@ def meedan_query(query_string, gql_client = gql_client, headers = headers, metho
         try:
             response = gql_client.execute(gql_query)
         except:
-            print('Server error on GQL query', gql_query, '\nerror:\n', response)
+            print('Server error on GQL query',
+                  gql_query, '\nerror:\n', response)
         return response
 
     if method == 'requests':
-        request = requests.post('https://check-api.checkmedia.org/api/graphql', json={'query': query_string}, headers=headers)
+        request = requests.post('https://check-api.checkmedia.org/api/graphql',
+                                json={'query': query_string}, headers=headers)
         if request.status_code == 200:
             return request.json()['data']
         else:
-            raise Exception("Query failed to run by returning code of {}. {}".format(request.status_code, query_string))
+            raise Exception("Query failed to run by returning code of {}. {}".format(
+                request.status_code, query_string))
 
 
 # Get all the tags
@@ -77,6 +84,7 @@ def get_all_tags():
     tags = pd.DataFrame([x['node'] for x in tags])
     return tags
 
+
 def get_all_tags():
     query_string = '''
     {
@@ -98,7 +106,7 @@ def get_all_tags():
     return tags
 
 
-def get_all_medias(max_medias = 0):
+def get_all_medias(max_medias=0):
     query_string = '''
     {
       team(id: 2014) {
@@ -133,12 +141,13 @@ def get_all_medias(max_medias = 0):
     meedan_lists = all_medias['team']['projects']['edges']
     df_list = []
     for meedan_list in meedan_lists:
-        medias = pd.DataFrame([x['node'] for x in meedan_list['node']['project_medias']['edges']])
+        medias = pd.DataFrame(
+            [x['node'] for x in meedan_list['node']['project_medias']['edges']])
         medias['list_name'] = meedan_list['node']['title']
         df_list.append(medias)
     df = pd.concat(df_list)
-    df = df.set_index('dbid') # else index are duplicated
-    df = df.rename(columns= {'project_id' : 'list_dbid'})
+    df = df.set_index('dbid')  # else index are duplicated
+    df = df.rename(columns={'project_id': 'list_dbid'})
     # add youtube urls
     urls = pd.Series(index=df.index)
     uris = pd.Series(index=df.index)
@@ -153,11 +162,11 @@ def get_all_medias(max_medias = 0):
     return df
 
 
-def update_video_description(media_id = 1,
-                             list_dbid = 3111,
-                             updated_title = 'Default Title',
-                             updated_description = 'no description',
-                             gql_client = gql_client):
+def update_video_description(media_id=1,
+                             list_dbid=3111,
+                             updated_title='Default Title',
+                             updated_description='no description',
+                             gql_client=gql_client):
     list_dbid = str(list_dbid)
     media_id = media_id.split('==')[0]  # keep only the part before the ==
     # formatting is pain in the ass https://stackoverflow.com/questions/42444130/python-multi-line-json-and-variables
@@ -176,7 +185,7 @@ def update_video_description(media_id = 1,
         }
       }
     }
-    '''% (list_dbid, media_id, updated_description, updated_title)
+    ''' % (list_dbid, media_id, updated_description, updated_title)
     try:
         gql_query = gql.gql(query_string)
     except:
@@ -188,7 +197,8 @@ def update_video_description(media_id = 1,
             gql_field.value.value = gql_field.value.value.replace('\n', '\\n')
             gql_field.value.value = gql_field.value.value.replace('\t', '\\t')
             gql_field.value.value = gql_field.value.value.replace('\s', '\\s')
-            gql_field.value.value = demoji.replace(gql_field.value.value, '*_*')
+            gql_field.value.value = demoji.replace(
+                gql_field.value.value, '*_*')
     try:
         response = gql_client.execute(gql_query)
         return response
@@ -216,19 +226,23 @@ def add_and_update_video(youtube_uri, list_dbid, n_description_lines=10):
     media_id = API_response['id']
     updated_title = author_name + ' || ' + title
     trimmed_description = first_n_lines(description, n=n_description_lines)
-    updated_description = '|' + tags_string + '|\n' + trimmed_description + '\n \n Channel: ' + author_name + ' | ' + author_url
-    updated_description = updated_description.replace('\n', '\\n').replace('\t', '\\t').replace('"', '')
-    updated_title = updated_title.replace('\n', '\\n').replace('\t', '\\t').replace('"', '')
+    updated_description = '|' + tags_string + '|\n' + trimmed_description + \
+        '\n \n Channel: ' + author_name + ' | ' + author_url
+    updated_description = updated_description.replace(
+        '\n', '\\n').replace('\t', '\\t').replace('"', '')
+    updated_title = updated_title.replace(
+        '\n', '\\n').replace('\t', '\\t').replace('"', '')
     print('Sleeping 15 sec to let system update')
     time.sleep(3)
-    updated = update_video_description(media_id, list_dbid, updated_title, updated_description)
+    updated = update_video_description(
+        media_id, list_dbid, updated_title, updated_description)
     return updated
 
 
 def add_uri_to_list(youtube_uri, list_dbid):
     youtube_url = 'https://www.youtube.com/watch?v=' + youtube_uri
     query = '''
-    mutation create 
+    mutation create
     {
         createProjectMedia(
             input: {
@@ -246,8 +260,7 @@ def add_uri_to_list(youtube_uri, list_dbid):
     return(new_element)
 
 
-
-def get_all_lists(headers = headers):
+def get_all_lists(headers=headers):
     list_query = '''
     query {
       me {
@@ -263,7 +276,7 @@ def get_all_lists(headers = headers):
       }
     }
     '''
-    all_lists = meedan_query(query_string = list_query)
+    all_lists = meedan_query(query_string=list_query)
     all_lists = all_lists['me']['current_team']['projects']['edges']
     all_lists = [x['node'] for x in all_lists]
     all_lists = pd.DataFrame(all_lists)
