@@ -22,6 +22,7 @@ class MeedanAPI:
         if self.key is None:
             print("WARNING: COULD NOT LOAD MEEDAN KEY, QUERIES WILL FAIL")
 
+        #TODO: catch any errors that might result from improper headers
         gql_transport=RequestsHTTPTransport(
             url=self.endpoint,
             headers=self.headers,
