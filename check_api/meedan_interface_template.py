@@ -17,6 +17,7 @@ class MeedanAPI:
     #   - Potential future changes: design functions to take iterables or single values; create Python "item" class to
     #     mirror Meedan's "item" object so that title, description, etc. are easily accessible
 
+    
     def create_client(self):
         # helper function to instantiate client for requests made with gql
         if self.key is None:
@@ -32,6 +33,7 @@ class MeedanAPI:
             fetch_schema_from_transport=False, # maybe change later
         )
         return client
+    
 
     def execute(self, query_string):
         """
@@ -46,21 +48,23 @@ class MeedanAPI:
         # 2) send the formatted query string to self.endpoint using package requests, gql, or which ever package you
         #    find best appropriate to query graphQL APIs. Use self.headers to authenticate
         # Catch and print API errors clearly to assist with debugging other functions
-        response = None
+        
+        response, gql_query = 'response from API', 'formatted gql query'
         try:
             gql_query = gql.gql(query_string)
         except:
-            print('GQL error formatting query: \n', query_string)
+            print('GQL error formatting query:\n', query_string)
         try:
             response = self.client.execute(gql_query)
         except:
-            print('Server error on GQL query', gql_query, '\nerror:\n', response)
+            print('Server error on GQL query:\n', gql_query, '\nError:\n', response)
         return response
+        
         # response = requests.get(url = self.endpoint, params = query_string, headers = self.headers)
         # if response.status_code != 200:
         #     raise Exception('Server-reported error: {}\nGiven query:\n{}'.format(response.status_code, query_string))
         # try:
-        #     return response.json()['data']
+        #     return response.json()
         # except Exception as e:
         #     print('Response formating error:\n', e)
 
