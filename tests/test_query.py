@@ -1,10 +1,10 @@
 import unittest
 import sys
 import os
+from expected_response import xr_dbid_id, xr_list_names, xr_medias_count
 sys.path.append('../check_api')
 from meedan_interface_template import MeedanAPI
 
-# Suggestion: Put expected response into external file that we can pull from to reduce clutter
 class TestAPI(unittest.TestCase):
 
     def setUp(self):
@@ -21,17 +21,8 @@ class TestAPI(unittest.TestCase):
           }
         }
         '''
-        # expected response from graphIQL
-        expected_response = {
-            "me": {
-                "current_team": {
-                    "dbid": 2014,
-                    "id": "VGVhbS8yMDE0\n"
-                }
-            }
-        }
         response = self.meedan_api.execute(sample_query)
-        self.assertEqual(response, expected_response, 'Should not error')
+        self.assertEqual(response, xr_dbid_id, 'Should not error')
 
     def test_getprojects(self):
         sample_query = '''query {
@@ -48,120 +39,14 @@ class TestAPI(unittest.TestCase):
           }
         }
         '''
-        expected_response = {
-            "me": {
-                "current_team": {
-                    "projects": {
-                        "edges": [
-                            {
-                                "node": {
-                                    "title": "#Avani"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "complete"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "debunks"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "false positives"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "#Iland"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "#Janine"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "#Jean"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "#Michael"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "#Nicole"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "religious_edge_cases"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "#Rose"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "#Scott"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "test"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "true positives"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "#Uma"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "#Vyoma"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "#Wendy"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "#Wietske"
-                                }
-                            },
-                            {
-                                "node": {
-                                    "title": "#Zuzanna"}}]}}}}
         response = self.meedan_api.execute(sample_query)
-        self.assertEqual(response, expected_response, 'Should not error')
+        self.assertEqual(response, xr_list_names, 'Should not error')
 
     @unittest.expectedFailure
     def test_bad_query(self):
         sample_query = 'query -> me -> current_team -> id -> dbid'
-        expected_response = {
-            "me": {
-                "current_team": {
-                    "dbid": 2014,
-                    "id": "VGVhbS8yMDE0\n"
-                }
-            }
-        }
         response = self.meedan_api.execute(sample_query)
-        self.assertEqual(response, expected_response, 'Formatting error')
+        self.assertEqual(response, xr_dbid_id, 'Formatting error')
 
     @unittest.expectedFailure
     def test_fail(self):
@@ -179,115 +64,8 @@ class TestAPI(unittest.TestCase):
           } 
         }
         '''
-        expected_response = {
-          "data": {
-            "me": {
-              "current_team": {
-                "projects": {
-                  "edges": [
-                    {
-                      "node": {
-                        "medias_count": 0
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 7
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 3
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 0
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 87
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 84
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 87
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 85
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 85
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 1
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 87
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 85
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 88
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 0
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 87
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 87
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 80
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 2
-                      }
-                    },
-                    {
-                      "node": {
-                        "medias_count": 0
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
-    	response = self.meedan_api.execute(sample_query)
-        self.assertEqual(response, expected_response, 'Incorrect field error')
+        response = self.meedan_api.execute(sample_query)
+        self.assertEqual(response, xr_medias_count, 'Incorrect field error')
 
 if __name__ == '__main__':
     unittest.main()
