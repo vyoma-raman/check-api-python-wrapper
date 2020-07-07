@@ -1,7 +1,7 @@
 import unittest
 import sys
 import os
-from expected_response import xr_dbid_id, xr_list_names, xr_medias_count
+from expected_response import xr_dbid_id, xr_list_names, xr_medias_count,xr_descriptions
 sys.path.append('../check_api')
 from meedan_interface_template import MeedanAPI
 
@@ -66,6 +66,30 @@ class TestAPI(unittest.TestCase):
         '''
         response = self.meedan_api.execute(sample_query)
         self.assertEqual(response, xr_medias_count, 'Incorrect field error')
+
+    def test_descriptions(self):
+        sample_query = '''query {
+          me {
+            current_team {
+              projects {
+                edges {
+                  node {
+                    project_medias {
+                      edges {
+                        node {
+                          description
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        '''
+        response = self.meedan_api.execute(sample_query)
+        self.assertEqual(response, xr_descriptions, 'Should not error')
 
 if __name__ == '__main__':
     unittest.main()
