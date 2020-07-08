@@ -17,7 +17,7 @@ class MeedanAPI:
     #   - Potential future changes: design functions to take iterables or single values; create Python "item" class to
     #     mirror Meedan's "item" object so that title, description, etc. are easily accessible
 
-    
+
     def create_client(self):
         # helper function to instantiate client for requests made with gql
         if self.key is None:
@@ -33,7 +33,7 @@ class MeedanAPI:
             fetch_schema_from_transport=False, # maybe change later
         )
         return client
-    
+
 
     def execute(self, query_string):
         """
@@ -48,25 +48,18 @@ class MeedanAPI:
         # 2) send the formatted query string to self.endpoint using package requests, gql, or which ever package you
         #    find best appropriate to query graphQL APIs. Use self.headers to authenticate
         # Catch and print API errors clearly to assist with debugging other functions
-        
-        response, gql_query = 'response from API', 'formatted gql query'
+
+        response, gql_query = None, None
         try:
             gql_query = gql.gql(query_string)
         except:
-            print('GQL error formatting query:\n', query_string)
+            raise SyntaxError('GQL error formatting query: ' + query_string)
         try:
             response = self.client.execute(gql_query)
-        except:
-            print('Server error on GQL query:\n', gql_query, '\nError:\n', response)
+        except Exception as e:
+            raise Exception('Server error on GQL query: ' + query_string + ' Error: ' + str(e))
         return response
-        
-        # response = requests.get(url = self.endpoint, params = query_string, headers = self.headers)
-        # if response.status_code != 200:
-        #     raise Exception('Server-reported error: {}\nGiven query:\n{}'.format(response.status_code, query_string))
-        # try:
-        #     return response.json()
-        # except Exception as e:
-        #     print('Response formating error:\n', e)
+
 
     def add_video(self, uri, list_id):
         """
@@ -74,9 +67,20 @@ class MeedanAPI:
         :param list_id: str or int, refering to the list name or list_dbid
         :return: some confirmation
         """
-        # forge the query_string and then send with self.execute
-        # catch the 'item already exists' error
-        pass
+        query_string = '''mutation {
+          createProjectMedia(input: {
+            clientMutationId: "1",
+            project_id: %s,
+            url: "%s",
+          }) {
+            project_media {
+              dbid
+            }
+          }
+        }''' % (str(list_id), uri)
+        response = self.execute(query_string)
+        #TODO: Parse response and return dbid as confirmation
+        return response
 
     def remove_video(self, item_id, list_id):
         """
