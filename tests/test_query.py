@@ -1,10 +1,10 @@
 import unittest
 import sys
 import os
+import warnings
 from expected_response import xr_dbid_id, xr_list_names, xr_medias_count,xr_descriptions
 sys.path.append('../check_api')
 from meedan_interface_template import MeedanAPI
-import warnings
 
 class TestAPI(unittest.TestCase):
 
@@ -44,11 +44,11 @@ class TestAPI(unittest.TestCase):
         response = self.meedan_api.execute(sample_query)
         self.assertEqual(response, xr_list_names, 'Should not error')
 
-    def test_bad_query(self):
+    def test_bad_format(self):
         sample_query = 'query -> me -> current_team -> id -> dbid'
         self.assertRaises(SyntaxError, lambda: self.meedan_api.execute(sample_query))
 
-    def test_fail(self):
+    def test_server_fail(self):
         sample_query = '''query {
           me {
             current_team {
@@ -72,7 +72,7 @@ class TestAPI(unittest.TestCase):
               projects {
                 edges {
                   node {
-                    project_medias {
+                    project_medias (first:2) {
                       edges {
                         node {
                           description
@@ -87,11 +87,11 @@ class TestAPI(unittest.TestCase):
         }
         '''
         response = self.meedan_api.execute(sample_query)
-        self.assertEqual(response, xr_descriptions, 'Should not error')
+        self.assertEqual(response['me']['current_team']['projects']['edges'][1], xr_descriptions, 'Should not error')
 
     #TODO: Finish fleshing out test once add_video is implemented
     def test_add(self):
-        response = self.meedan_api.add_video("https://www.youtube.com/watch?v=dQw4w9WgXcQ", 3127)
+        response = self.meedan_api.add_video("dQw4w9WgXcQ", 3127)
 
 if __name__ == '__main__':
     unittest.main()

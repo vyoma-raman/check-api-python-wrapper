@@ -1,4 +1,3 @@
-import requests
 import gql
 from gql.transport.requests import RequestsHTTPTransport
 
@@ -67,6 +66,7 @@ class MeedanAPI:
         :param list_id: str or int, refering to the list name or list_dbid
         :return: some confirmation
         """
+        url = 'https://www.youtube.com/watch?v=' + uri
         query_string = '''mutation {
           createProjectMedia(input: {
             clientMutationId: "1",
@@ -77,7 +77,7 @@ class MeedanAPI:
               dbid
             }
           }
-        }''' % (str(list_id), uri)
+        }''' % (str(list_id), url)
         response = self.execute(query_string)
         #TODO: Parse response and return dbid as confirmation
         return response
