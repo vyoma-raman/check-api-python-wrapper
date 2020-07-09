@@ -16,7 +16,6 @@ class MeedanAPI:
     #   - Potential future changes: design functions to take iterables or single values; create Python "item" class to
     #     mirror Meedan's "item" object so that title, description, etc. are easily accessible
 
-
     def create_client(self):
         # helper function to instantiate client for requests made with gql
         if self.key is None:
@@ -32,7 +31,6 @@ class MeedanAPI:
             fetch_schema_from_transport=False, # maybe change later
         )
         return client
-
 
     def execute(self, query_string):
         """
@@ -68,7 +66,6 @@ class MeedanAPI:
             list_id = list_dict[list_id]
         return str(list_id)
 
-
     def add_video(self, uri, list_id):
         """
         :str uri: 11 character string that serve as video identifier in a youtube url
@@ -87,20 +84,30 @@ class MeedanAPI:
             }
           }
         }''' % (self.get_list_id(list_id), url)
-        #try to collect response. if error code 9, remove_video() and then try again
+        #try to collect response. if error code 9, remove video and then try again
         response = self.execute(query_string)
         #TODO: Parse response and return dbid as confirmation
         return response
 
-    def remove_video(self, item_id, list_id):
+    def trash_video(self, item_ids):
         """
-        :str item_id: str id such as "UHJvamVjdE1lZGlhLzM5MDc5MA==\n"
-        :param list_id: str or int, refering to the list name or list_dbid
+        :list item_id: non-empty list of ids of items to trash such as ["UHJvamVjdE1lZGlhLzM5MDc5MA==\n"]
         :return: some confirmation
         """
-        # similar to above. Catch error if item not in the list
-        # if the API doesnt let you identify items by uri, another identifier (like dbid) can be used instead
-        pass
+        # TODO: accept list_id and catch error if item not in list
+        query_string = '''mutation {
+          updateProjectMedia(input: {
+            clientMutationId: "1",
+            id: "%s",
+            ids: %s,
+            archived: 1
+          }) {
+            affectedIds
+          }
+        }''' % (item_ids[0], str(item_ids).replace("'", '"'))
+        response = self.execute(query_string)
+        #TODO: Parse response and return that affectedids == item_ids as confirmation
+        return response
 
     def collect_annotations(self, list_id):
         """
