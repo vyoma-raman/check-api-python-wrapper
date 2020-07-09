@@ -59,6 +59,15 @@ class MeedanAPI:
             raise Exception('Server error on GQL query: ' + query_string + ' Error: ' + str(e))
         return response
 
+    def get_list_id(self, list_id):
+        if isinstance(list_id, str):
+            list_dict = { "#Avani": 3129, "complete": 3115, "debunks": 3163, "false positives": 3088, 
+            "#Iland": 3140, "#Janine": 3112, "#Jean": 3138, "#Michael": 3132, "#Nicole": 3141, 
+            "religious_edge_cases": 3162, "#Rose": 3130, "#Scott": 3133, "test": 3127, "true positives": 3109,
+            "#Uma": 3136, "#Vyoma": 3135, "#Wendy": 3137, "#Wietske": 3111, "#Zuzanna": 3139 }
+            list_id = list_dict[list_id]
+        return str(list_id)
+
 
     def add_video(self, uri, list_id):
         """
@@ -77,17 +86,25 @@ class MeedanAPI:
               dbid
             }
           }
-        }''' % (str(list_id), url)
+        }''' % (self.get_list_id(list_id), url)
+        #try to collect response. if error code 9, remove_video() and then try again
         response = self.execute(query_string)
         #TODO: Parse response and return dbid as confirmation
         return response
 
     def remove_video(self, item_id, list_id):
         """
-        :str item_id: a unique identifier for the item, there a several ones (dbid, id, uri) not sure which is best for this purpose
+        :str item_id: str id such as "UHJvamVjdE1lZGlhLzM5MDc5MA==\n"
         :param list_id: str or int, refering to the list name or list_dbid
         :return: some confirmation
         """
         # similar to above. Catch error if item not in the list
         # if the API doesnt let you identify items by uri, another identifier (like dbid) can be used instead
+        pass
+
+    def collect_annotations(self, list_id):
+        """
+        :param list_id: str or int, refering to the list name or list_dbid
+        :return: annotations
+        """
         pass

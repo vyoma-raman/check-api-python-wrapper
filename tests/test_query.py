@@ -91,7 +91,7 @@ class TestAPI(unittest.TestCase):
 
     #TODO: Finish fleshing out test once add_video is implemented
     def test_add(self):
-        response = self.meedan_api.add_video("dQw4w9WgXcQ", 3127)
+        response = self.meedan_api.add_video("C2xel6q0yao", "#Wietske")
 
 if __name__ == '__main__':
     unittest.main()
