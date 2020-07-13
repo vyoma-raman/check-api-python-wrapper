@@ -3,8 +3,8 @@ import sys
 import os
 import warnings
 from expected_response import xr_dbid_id, xr_list_names, xr_medias_count,xr_descriptions
-sys.path.append('../check_api')
-from meedan_interface import MeedanAPI
+sys.path.append('..')
+from check_api.meedan_interface import MeedanAPI
 
 class TestAPI(unittest.TestCase):
 
@@ -88,14 +88,6 @@ class TestAPI(unittest.TestCase):
         '''
         response = self.meedan_api.execute(sample_query)
         self.assertEqual(response['me']['current_team']['projects']['edges'][1], xr_descriptions, 'Should not error')
-
-    #TODO: Finish fleshing out test once add_video is implemented
-    def test_add(self):
-        response = self.meedan_api.add_video("C2xel6q0yao", "#Wietske")
-
-    #TODO: Finish fleshing out test once trash_video is completed
-    def test_trash(self):
-        response = self.meedan_api.trash_video(["UHJvamVjdE1lZGlhLzM5MDkzMA==\\n", "UHJvamVjdE1lZGlhLzM5MDkyOQ==\\n"])
 
 if __name__ == '__main__':
     unittest.main()
