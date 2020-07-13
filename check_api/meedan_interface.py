@@ -58,6 +58,11 @@ class MeedanAPI:
         return response
 
     def get_list_id(self, list_id):
+        """
+        :param list_id: str or int, refering to the list name or list_dbid
+        :return: string form of int of list, to be fed into query
+        """
+        #use parser to collect and find list
         if isinstance(list_id, str):
             list_dict = { "#Avani": 3129, "complete": 3115, "debunks": 3163, "false positives": 3088, 
             "#Iland": 3140, "#Janine": 3112, "#Jean": 3138, "#Michael": 3132, "#Nicole": 3141, 
@@ -65,6 +70,13 @@ class MeedanAPI:
             "#Uma": 3136, "#Vyoma": 3135, "#Wendy": 3137, "#Wietske": 3111, "#Zuzanna": 3139 }
             list_id = list_dict[list_id]
         return str(list_id)
+
+    def format_item(self, item_id):
+        """
+        :param items_ids: accepts single item id string or nonempty list of item id strings
+        :return: string of item or items, to be fed into query
+        """
+        return repr(item_id).replace("'", '"')
 
     def add_video(self, uri, list_id):
         """
@@ -84,29 +96,80 @@ class MeedanAPI:
             }
           }
         }''' % (self.get_list_id(list_id), url)
-        #try to collect response. if error code 9, remove video and then try again
+        #try to collect response. if exception raised, if error code 9, remove_video and try again. else, print error
+        #create parser to check error code
         response = self.execute(query_string)
         #TODO: Parse response and return dbid as confirmation
         return response
 
-    def trash_video(self, item_ids):
+    def trash_video(self, item_ids, list_id=None):
         """
-        :list item_id: non-empty list of ids of items to trash such as ["UHJvamVjdE1lZGlhLzM5MDc5MA==\n"]
+        :list item_ids: non-empty list of ids of items to trash such as ["UHJvamVjdE1lZGlhLzM5MDc5MA==\n"]
+        :param list_id: str or int, refering to the list name or list_dbid
         :return: some confirmation
         """
-        # TODO: accept list_id and catch error if item not in list
+        if len(item_ids) == 0:
+            raise Exception("Please specify item(s) to send to trash.")
+        # TODO: accept list_id and catch error if item not in list or does not exist
         query_string = '''mutation {
           updateProjectMedia(input: {
             clientMutationId: "1",
-            id: "%s",
+            id: %s,
             ids: %s,
             archived: 1
           }) {
             affectedIds
           }
-        }''' % (item_ids[0], str(item_ids).replace("'", '"'))
+        }''' % (self.format_item(item_ids[0]), self.format_item(item_ids))
         response = self.execute(query_string)
-        #TODO: Parse response and return that affectedids == item_ids as confirmation
+        #TODO: Parse response and return that affectedIds == item_ids as confirmation
+        return response
+
+    def restore_video(self, item_ids):
+        """
+        :list item_ids: non-empty list of ids of items to remove such as ["UHJvamVjdE1lZGlhLzM5MDc5MA==\n"]
+        :return: some confirmation
+        """
+        if len(item_ids) == 0:
+            raise Exception("Please specify item(s) to restore from trash.")
+        query_string = '''mutation {
+          updateProjectMedia(input: {
+            clientMutationId: "1",
+            id: %s,
+            ids: %s,
+            archived: 0
+          }) {
+            affectedIds
+          }
+        }''' % (self.format_item(item_ids[0]), self.format_item(item_ids))
+        response = self.execute(query_string)
+        #TODO: Parse response and return that affectedIds == item_ids as confirmation
+        return response
+
+    def delete_video(self, item_ids):
+        """
+        :list item_ids: non-empty list of ids of items to remove such as ["UHJvamVjdE1lZGlhLzM5MDc5MA==\n"]
+        :return: some confirmation
+        """
+        if len(item_ids) == 0:
+            raise Exception("Please specify item(s) to permanently remove.")
+        elif len(item_ids) == 1:
+            query_string = '''mutation {
+              destroyProjectMedia(input: {
+                clientMutationId: "1", 
+                id: %s
+              }) { deletedId }
+            }''' % (self.format_item(item_ids[0]))
+        else:
+            query_string = '''mutation {
+              destroyProjectMedia(input: {
+                clientMutationId: "1",
+                id: %s,
+                ids: %s
+              }) { affectedIds }
+            }''' % (self.format_item(item_ids[0]), self.format_item(item_ids))
+        response = self.execute(query_string)
+        #TODO: Parse response and return 
         return response
 
     def collect_annotations(self, list_id):
