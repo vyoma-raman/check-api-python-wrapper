@@ -13,8 +13,8 @@ class TestAPI(unittest.TestCase):
         warnings.simplefilter("ignore", ResourceWarning)
 
     #TODO: Finish fleshing out tests once method is completed
-    def test_trash(self):
-        response = self.meedan_api.trash_video(["UHJvamVjdE1lZGlhLzM5MDkzMA==\n", "UHJvamVjdE1lZGlhLzM5MDkyOQ==\n"])
+    def test_delete(self):
+        response = self.meedan_api.trash_video(["UHJvamVjdE1lZGlhLzM5MTc1OQ==\n"])
 
 if __name__ == '__main__':
     unittest.main()

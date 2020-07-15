@@ -2,8 +2,8 @@ import unittest
 import sys
 import os
 import warnings
-sys.path.append('..')
-from check_api.meedan_interface import MeedanAPI
+sys.path.append('../check_api')
+from meedan_interface import MeedanAPI
 
 class TestAPI(unittest.TestCase):
 

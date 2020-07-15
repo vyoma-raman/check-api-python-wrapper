@@ -3,8 +3,8 @@ import sys
 import os
 import warnings
 from expected_response import xr_dbid_id, xr_list_names, xr_medias_count,xr_descriptions
-sys.path.append('..')
-from check_api.meedan_interface import MeedanAPI
+sys.path.append('../check_api')
+from meedan_interface import MeedanAPI
 
 class TestAPI(unittest.TestCase):
 

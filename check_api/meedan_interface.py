@@ -1,4 +1,5 @@
 import gql
+import util
 from gql.transport.requests import RequestsHTTPTransport
 
 class MeedanAPI:
@@ -57,19 +58,35 @@ class MeedanAPI:
             raise Exception('Server error on GQL query: ' + query_string + ' Error: ' + str(e))
         return response
 
-    def get_list_id(self, list_id):
+    def get_proj_id(self, slug, proj_dbid):
         """
-        :param list_id: str or int, refering to the list name or list_dbid
-        :return: string form of int of list, to be fed into query
+        :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
+        :str or int proj_id: either the name of the list or the project dbid
+        :str return: project dbid
         """
-        #use parser to collect and find list
-        if isinstance(list_id, str):
-            list_dict = { "#Avani": 3129, "complete": 3115, "debunks": 3163, "false positives": 3088, 
-            "#Iland": 3140, "#Janine": 3112, "#Jean": 3138, "#Michael": 3132, "#Nicole": 3141, 
-            "religious_edge_cases": 3162, "#Rose": 3130, "#Scott": 3133, "test": 3127, "true positives": 3109,
-            "#Uma": 3136, "#Vyoma": 3135, "#Wendy": 3137, "#Wietske": 3111, "#Zuzanna": 3139 }
-            list_id = list_dict[list_id]
-        return str(list_id)
+        if isinstance(proj_dbid, str):
+            #queries for project names and their associated ID
+            proj_query = '''query {
+              team(slug: "%s") {
+                projects {
+                  edges {
+                    node {
+                      title
+                      id
+                      dbid
+                    }
+                  }
+                }
+              }
+            }
+            ''' % (slug)
+            response = self.execute(proj_query)
+            # Extract list of projects
+            proj_nodes = util.strip(response)
+            # Create new dictionary where the project titles are the keys
+            proj_dict = util.pivot_dict(proj_nodes, "title", "dbid")
+            proj_dbid = proj_dict[proj_dbid]
+        return str(proj_dbid)
 
     def format_item(self, item_id):
         """
@@ -78,10 +95,11 @@ class MeedanAPI:
         """
         return repr(item_id).replace("'", '"')
 
-    def add_video(self, uri, list_id):
+    def add_video(self, uri, list_id, slug):
         """
         :str uri: 11 character string that serve as video identifier in a youtube url
         :param list_id: str or int, refering to the list name or list_dbid
+        :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
         :return: some confirmation
         """
         url = 'https://www.youtube.com/watch?v=' + uri
@@ -95,12 +113,34 @@ class MeedanAPI:
               dbid
             }
           }
-        }''' % (self.get_list_id(list_id), url)
+        }''' % (self.get_proj_id(slug, list_id), url)
         #try to collect response. if exception raised, if error code 9, remove_video and try again. else, print error
-        #create parser to check error code
-        response = self.execute(query_string)
+        try:
+            response = self.execute(query_string)
+        except Exception as e:
+            # if error code == 9:
+                # get id of this item
+                # call delete_video with this id in a list
+                # try to execute this query again
+            # else:
+                # print error message
+            print(e)
         #TODO: Parse response and return dbid as confirmation
         return response
+
+    def add_video_list(self, uri_list, list_id, slug):
+        """
+        :list uri_list: list of strings that serve as video identifier in a youtube url
+        :param list_id: str or int, refering to the list name or list_dbid
+        :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
+        :return: some confirmation
+        """
+        # TODO: get dbid of team
+        for uri in uri_list:
+            response = self.add_video(uri, list_id, slug)
+            # TODO: if response != dbid:
+                # raise Exception
+        return # dbid
 
     def trash_video(self, item_ids, list_id=None):
         """
@@ -110,7 +150,10 @@ class MeedanAPI:
         """
         if len(item_ids) == 0:
             raise Exception("Please specify item(s) to send to trash.")
-        # TODO: accept list_id and catch error if item not in list or does not exist
+        if list_id:
+            for item in item_ids:
+                # TODO: raise Exception if item not in list
+                pass
         query_string = '''mutation {
           updateProjectMedia(input: {
             clientMutationId: "1",
@@ -158,7 +201,12 @@ class MeedanAPI:
               destroyProjectMedia(input: {
                 clientMutationId: "1", 
                 id: %s
-              }) { deletedId }
+              }) { 
+                deletedId,
+                team {
+                  name
+                }
+              }
             }''' % (self.format_item(item_ids[0]))
         else:
             query_string = '''mutation {
@@ -166,10 +214,15 @@ class MeedanAPI:
                 clientMutationId: "1",
                 id: %s,
                 ids: %s
-              }) { affectedIds }
+              }) { 
+                affectedIds,
+                team {
+                  name
+                }
+              }
             }''' % (self.format_item(item_ids[0]), self.format_item(item_ids))
         response = self.execute(query_string)
-        #TODO: Parse response and return 
+        #TODO: Parse response and return team name
         return response
 
     def collect_annotations(self, list_id):
