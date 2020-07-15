@@ -1,4 +1,5 @@
 import gql
+import util
 from gql.transport.requests import RequestsHTTPTransport
 
 class MeedanAPI:
@@ -57,19 +58,42 @@ class MeedanAPI:
             raise Exception('Server error on GQL query: ' + query_string + ' Error: ' + str(e))
         return response
 
-    def get_list_id(self, list_id):
-        if isinstance(list_id, str):
-            list_dict = { "#Avani": 3129, "complete": 3115, "debunks": 3163, "false positives": 3088, 
-            "#Iland": 3140, "#Janine": 3112, "#Jean": 3138, "#Michael": 3132, "#Nicole": 3141, 
-            "religious_edge_cases": 3162, "#Rose": 3130, "#Scott": 3133, "test": 3127, "true positives": 3109,
-            "#Uma": 3136, "#Vyoma": 3135, "#Wendy": 3137, "#Wietske": 3111, "#Zuzanna": 3139 }
-            list_id = list_dict[list_id]
-        return str(list_id)
+    def get_proj_id(self, slug, proj_dbid):
+        """
+        :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
+        :str or int proj_id: either the name of the list or the project dbid
+        :int return: project dbid
+        """
+        if isinstance(proj_dbid, str):
+            #queries for project names and their associated ID
+            proj_query = '''query {
+              team(slug: "%s") {
+                projects {
+                  edges {
+                    node {
+                      title
+                      id
+                      dbid
+                    }
+                  }
+                }
+              }
+            }
+            ''' % (slug)
 
-    def add_video(self, uri, list_id):
+            response = self.execute(proj_query)
+            # Extract list of projects
+            proj_nodes = util.strip(response)
+            # Create new dictionary where the project titles are the keys
+            proj_dict = util.pivot_dict(proj_nodes, "title", "dbid")
+            proj_dbid = proj_dict[proj_dbid]
+        return str(proj_dbid)
+
+    def add_video(self, uri, list_id, slug):
         """
         :str uri: 11 character string that serve as video identifier in a youtube url
-        :param list_id: str or int, refering to the list name or list_dbid
+        :param list_id: str or int, refering to the list name or list_dbid respectively
+        :str slug: ame of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
         :return: some confirmation
         """
         url = 'https://www.youtube.com/watch?v=' + uri
@@ -83,7 +107,7 @@ class MeedanAPI:
               dbid
             }
           }
-        }''' % (self.get_list_id(list_id), url)
+        }''' % (self.get_project_id(list_id, slug), url)
         #try to collect response. if error code 9, remove video and then try again
         response = self.execute(query_string)
         #TODO: Parse response and return dbid as confirmation
