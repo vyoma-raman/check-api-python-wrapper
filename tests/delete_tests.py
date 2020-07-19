@@ -14,7 +14,7 @@ class TestAPI(unittest.TestCase):
 
     #TODO: Finish fleshing out tests once method is completed
     def test_delete(self):
-        response = self.meedan_api.trash_video(["UHJvamVjdE1lZGlhLzM5MTc1OQ==\n"])
+        response = self.meedan_api.delete_video(["UHJvamVjdE1lZGlhLzM5MTc1OQ==\n"])
 
 if __name__ == '__main__':
     unittest.main()
