@@ -114,6 +114,7 @@ class MeedanAPI:
             }
           }
         }''' % (self.get_proj_id(slug, list_id), url)
+        response = None
         #try to collect response. if exception raised, if error code 9, remove_video and try again. else, print error
         try:
             response = self.execute(query_string)
@@ -199,14 +200,9 @@ class MeedanAPI:
         elif len(item_ids) == 1:
             query_string = '''mutation {
               destroyProjectMedia(input: {
-                clientMutationId: "1", 
+                clientMutationId: "1",
                 id: %s
-              }) { 
-                deletedId,
-                team {
-                  name
-                }
-              }
+              }) { deletedId }
             }''' % (self.format_item(item_ids[0]))
         else:
             query_string = '''mutation {
@@ -214,7 +210,7 @@ class MeedanAPI:
                 clientMutationId: "1",
                 id: %s,
                 ids: %s
-              }) { 
+              }) {
                 affectedIds,
                 team {
                   name
