@@ -107,7 +107,7 @@ class MeedanAPI:
           createProjectMedia(input: {
             clientMutationId: "1",
             project_id: %s,
-            url: "%s",
+            url: "%s"
           }) {
             project_media {
               dbid
@@ -196,29 +196,17 @@ class MeedanAPI:
         :return: some confirmation
         """
         if len(item_ids) == 0:
-            raise Exception("Please specify item(s) to permanently remove.")
-        elif len(item_ids) == 1:
-            query_string = '''mutation {
-              destroyProjectMedia(input: {
-                clientMutationId: "1",
-                id: %s
-              }) { deletedId }
-            }''' % (self.format_item(item_ids[0]))
+            raise Exception("Please specify item(s) to permanently delete.")
         else:
             query_string = '''mutation {
               destroyProjectMedia(input: {
                 clientMutationId: "1",
                 id: %s,
                 ids: %s
-              }) {
-                affectedIds,
-                team {
-                  name
-                }
-              }
+              }) { affectedIds }
             }''' % (self.format_item(item_ids[0]), self.format_item(item_ids))
         response = self.execute(query_string)
-        #TODO: Parse response and return team name
+        #TODO: Parse response and return that affectedIds == item_ids as confirmation
         return response
 
     def collect_annotations(self, list_id):
