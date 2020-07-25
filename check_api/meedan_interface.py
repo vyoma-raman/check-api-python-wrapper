@@ -5,7 +5,7 @@ from gql.transport.requests import RequestsHTTPTransport
 class MeedanAPI:
     def __init__(self, key): # add more arguments if needed
         """
-        :param key:
+        :param key: API key
         """
         self.key = key
         self.endpoint = 'https://check-api.checkmedia.org/api/graphql'
@@ -65,7 +65,7 @@ class MeedanAPI:
         :str return: project dbid
         """
         if isinstance(proj_dbid, str):
-            #queries for project names and their associated ID
+            # queries for project names and their associated ID
             proj_query = '''query {
               team(slug: "%s") {
                 projects {
@@ -91,7 +91,7 @@ class MeedanAPI:
     def format_item(self, item_id):
         """
         :param items_ids: accepts single item id string or nonempty list of item id strings
-        :return: string of item or items, to be fed into query
+        :return: string of item to be fed into query
         """
         return repr(item_id).replace("'", '"')
 
@@ -100,22 +100,22 @@ class MeedanAPI:
         :str uri: 11 character string that serve as video identifier in a youtube url
         :param list_id: str or int, refering to the list name or list_dbid
         :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
-        :return: some confirmation
+        :return: bool of whether expected response was received
         """
         url = 'https://www.youtube.com/watch?v=' + uri
         query_string = '''mutation {
           createProjectMedia(input: {
             clientMutationId: "1",
-            project_id: %s,
+            add_to_project_id: %s,
             url: "%s"
           }) {
             project_media {
-              dbid
+              url
             }
           }
         }''' % (self.get_proj_id(slug, list_id), url)
         response = None
-        #try to collect response. if exception raised, if error code 9, remove_video and try again. else, print error
+        # TODO: if exception raised, if error code 9, remove_video and try again. else, print error
         try:
             response = self.execute(query_string)
         except Exception as e:
@@ -126,8 +126,77 @@ class MeedanAPI:
             # else:
                 # print error message
             print(e)
-        #TODO: Parse response and return dbid as confirmation
-        return response
+        return response # TODO: returned url == url
+
+    def update_video(self, item_id, archive):
+        """
+        :str item_id: id of item to trash or restore
+        :int archive: 0 to restore, 1 to trash
+        :return: bool of whether expected response was received
+        """
+        if len(item_id) == 0:
+            raise Exception("Please specify item(s) to restore from trash.")
+        query_string = '''mutation {
+          updateProjectMedia(input: {
+            clientMutationId: "1",
+            id: %s,
+            archived: %s
+          }) { affectedId }
+        }''' % (self.format_item(item_id), str(archive))
+        response = self.execute(query_string)
+        return response # TODO: affectedId == item_id
+
+    def trash_video(self, item_id):
+        """
+        :str item_id: id of item to trash
+        :return: some confirmation
+        """
+        return self.update_video(item_id, 1)
+
+    def restore_video(self, item_id):
+        """
+        :str item_id: id of item to restore
+        :return: some confirmation
+        """
+        return self.update_video(item_id, 0)
+
+    def delete_video(self, item_id):
+        """
+        :str item_id: id of item to delete
+        :return: some confirmation
+        """
+        query_string = '''mutation {
+          destroyProjectMedia(input: {
+            clientMutationId: "1",
+            id: %s
+          }) { deletedId }
+        }''' % (self.format_item(item_id))
+        response = None
+        try:
+            response = self.execute(query_string)
+        except:
+            try:
+                self.restore_video(item_id)
+                response = self.execute(query_string)
+            except Exception as e:
+                print(e)
+        return response # TODO: deletedId == item_id
+    
+    def mutate_video_list(self, item_id_list, function, list_id=None, slug=None):
+        """
+        :list item_id_list: list of ids of videos to mutate (add, )
+        :return: some confirmation
+        """
+        if len(item_id_list) == 0:
+            raise Exception("Please specify item(s) to mutate.")
+        for item_id in item_id_list:
+            if not list_id:
+                success = function(item_id)
+            else:
+                success = function(item_id, list_id, slug)
+            # TODO: if not success:
+                # raise exception
+        return True
 
     def add_video_list(self, uri_list, list_id, slug):
         """
@@ -136,79 +205,30 @@ class MeedanAPI:
         :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
         :return: some confirmation
         """
-        # TODO: get dbid of team
-        for uri in uri_list:
-            response = self.add_video(uri, list_id, slug)
-            # TODO: if response != dbid:
-                # raise Exception
-        return # dbid
+        return self.mutate_video_list(uri_list, self.add_video, list_id, slug)
 
-    def trash_video(self, item_ids, list_id=None):
+    def trash_video_list(self, item_id_list, function):
         """
-        :list item_ids: non-empty list of ids of items to trash such as ["UHJvamVjdE1lZGlhLzM5MDc5MA==\n"]
-        :param list_id: str or int, refering to the list name or list_dbid
+        :list item_id_list: list of ids of videos to trash
         :return: some confirmation
         """
-        if len(item_ids) == 0:
-            raise Exception("Please specify item(s) to send to trash.")
-        if list_id:
-            for item in item_ids:
-                # TODO: raise Exception if item not in list
-                pass
-        query_string = '''mutation {
-          updateProjectMedia(input: {
-            clientMutationId: "1",
-            id: %s,
-            ids: %s,
-            archived: 1
-          }) {
-            affectedIds
-          }
-        }''' % (self.format_item(item_ids[0]), self.format_item(item_ids))
-        response = self.execute(query_string)
-        #TODO: Parse response and return that affectedIds == item_ids as confirmation
-        return response
+        return self.mutate_video_list(item_id_list, self.trash_video)
 
-    def restore_video(self, item_ids):
+    def restore_video_list(self, item_id_list, function):
         """
-        :list item_ids: non-empty list of ids of items to remove such as ["UHJvamVjdE1lZGlhLzM5MDc5MA==\n"]
+        :list item_id_list: list of ids of videos to restore
         :return: some confirmation
         """
-        if len(item_ids) == 0:
-            raise Exception("Please specify item(s) to restore from trash.")
-        query_string = '''mutation {
-          updateProjectMedia(input: {
-            clientMutationId: "1",
-            id: %s,
-            ids: %s,
-            archived: 0
-          }) {
-            affectedIds
-          }
-        }''' % (self.format_item(item_ids[0]), self.format_item(item_ids))
-        response = self.execute(query_string)
-        #TODO: Parse response and return that affectedIds == item_ids as confirmation
-        return response
+        return self.mutate_video_list(item_id_list, self.restore_video)
 
-    def delete_video(self, item_ids):
+    def delete_video_list(self, item_id_list, function):
         """
-        :list item_ids: non-empty list of ids of items to remove such as ["UHJvamVjdE1lZGlhLzM5MDc5MA==\n"]
+        :list item_id_list: list of ids of videos to delete
         :return: some confirmation
         """
-        if len(item_ids) == 0:
-            raise Exception("Please specify item(s) to permanently delete.")
-        else:
-            query_string = '''mutation {
-              destroyProjectMedia(input: {
-                clientMutationId: "1",
-                id: %s,
-                ids: %s
-              }) { affectedIds }
-            }''' % (self.format_item(item_ids[0]), self.format_item(item_ids))
-        response = self.execute(query_string)
-        #TODO: Parse response and return that affectedIds == item_ids as confirmation
-        return response
+        return self.mutate_video_list(item_id_list, self.delete_video)
 
+    # collect annotations
     def collect_annotations(self, list_id):
         """
         :param list_id: str or int, refering to the list name or list_dbid
