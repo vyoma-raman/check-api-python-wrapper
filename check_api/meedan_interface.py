@@ -110,7 +110,8 @@ class MeedanAPI:
             url: "%s"
           }) {
             project_media {
-              url
+              title
+              id
             }
           }
         }''' % (self.get_proj_id(slug, list_id), url)
@@ -126,7 +127,10 @@ class MeedanAPI:
             # else:
                 # print error message
             print(e)
-        return response # TODO: returned url == url
+        video_data = response["createProjectMedia"]["project_media"]
+        title = video_data["title"]
+        id = video_data["id"]
+        return {title: id}
 
     def update_video(self, item_id, archive):
         """
@@ -181,7 +185,7 @@ class MeedanAPI:
             except Exception as e:
                 print(e)
         return response # TODO: deletedId == item_id
-    
+
     def mutate_video_list(self, item_id_list, function, list_id=None, slug=None):
         """
         :list item_id_list: list of ids of videos to mutate (add, )
