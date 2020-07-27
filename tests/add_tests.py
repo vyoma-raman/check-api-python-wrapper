@@ -69,9 +69,9 @@ class TestAPI(unittest.TestCase):
 
     #TODO: Finish fleshing out test once add_video is implemented
     def test_add(self):
-        #response = self.meedan_api.delete_video("UHJvamVjdE1lZGlhLzM5MzQ3OA==\n")
-        response = self.meedan_api.add_video("XpqqjU7u5Yc", "test", "ischool-hrc")
-        print(response)
+        video_id_dict = self.meedan_api.add_video("XpqqjU7u5Yc", "#Wietske", "ischool-hrc")
+        # response = self.meedan_api.delete_video(list(video_id_dict.values())[0])
+        print(self.meedan_api.format_item(list(video_id_dict.values())[0]))
 
 if __name__ == '__main__':
     unittest.main()

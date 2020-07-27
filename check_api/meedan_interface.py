@@ -18,7 +18,7 @@ class MeedanAPI:
     #     mirror Meedan's "item" object so that title, description, etc. are easily accessible
 
     def create_client(self):
-        # helper function to instantiate client for requests made with gql
+        """helper function to instantiate client for requests made with gql"""
         if self.key is None:
             print("WARNING: COULD NOT LOAD MEEDAN KEY, QUERIES WILL FAIL")
 
@@ -35,6 +35,7 @@ class MeedanAPI:
 
     def execute(self, query_string):
         """
+        Executes the given GraphQL query
         :str query_string: # the query_string such as in graphIQL
         :return: API response (maybe as a dictionary)
         """
@@ -60,8 +61,9 @@ class MeedanAPI:
 
     def get_proj_id(self, slug, proj_dbid):
         """
+        Given a project list id or title, returns a string form of the list id formatted for GraphQL query
         :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
-        :str or int proj_id: either the name of the list or the project dbid
+        :str or int proj_dbid: either the name of the list or the project dbid
         :str return: project dbid
         """
         if isinstance(proj_dbid, str):
@@ -90,6 +92,7 @@ class MeedanAPI:
 
     def format_item(self, item_id):
         """
+        Given a string id for a project media, formats for insertion into GraphQL query
         :param items_ids: accepts single item id string or nonempty list of item id strings
         :return: string of item to be fed into query
         """
@@ -97,6 +100,7 @@ class MeedanAPI:
 
     def add_video(self, uri, list_id, slug):
         """
+        Adds the given YouTube video to the front of the given project list
         :str uri: 11 character string that serve as video identifier in a youtube url
         :param list_id: str or int, refering to the list name or list_dbid
         :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
@@ -134,6 +138,7 @@ class MeedanAPI:
 
     def update_video(self, item_id, archive):
         """
+        Helper function to trash or restore videos with the given id
         :str item_id: id of item to trash or restore
         :int archive: 0 to restore, 1 to trash
         :return: bool of whether expected response was received
@@ -152,6 +157,7 @@ class MeedanAPI:
 
     def trash_video(self, item_id):
         """
+        Sends given video to the trash
         :str item_id: id of item to trash
         :return: some confirmation
         """
@@ -159,6 +165,7 @@ class MeedanAPI:
 
     def restore_video(self, item_id):
         """
+        Restores given video from the trash
         :str item_id: id of item to restore
         :return: some confirmation
         """
@@ -166,6 +173,7 @@ class MeedanAPI:
 
     def delete_video(self, item_id):
         """
+        Removes given video from the project
         :str item_id: id of item to delete
         :return: some confirmation
         """
@@ -188,6 +196,7 @@ class MeedanAPI:
 
     def mutate_video_list(self, item_id_list, function, list_id=None, slug=None):
         """
+        Helper function to perform some mutation on a list of videos
         :list item_id_list: list of ids of videos to mutate (add, )
         :return: some confirmation
         """
@@ -204,6 +213,7 @@ class MeedanAPI:
 
     def add_video_list(self, uri_list, list_id, slug):
         """
+        Adds each video in the given list to given project list
         :list uri_list: list of strings that serve as video identifier in a youtube url
         :param list_id: str or int, refering to the list name or list_dbid
         :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
@@ -213,6 +223,7 @@ class MeedanAPI:
 
     def trash_video_list(self, item_id_list, function):
         """
+        Sends each video in the given list to the trash
         :list item_id_list: list of ids of videos to trash
         :return: some confirmation
         """
@@ -220,6 +231,7 @@ class MeedanAPI:
 
     def restore_video_list(self, item_id_list, function):
         """
+        Restores each video in the given list from the trash
         :list item_id_list: list of ids of videos to restore
         :return: some confirmation
         """
@@ -227,12 +239,12 @@ class MeedanAPI:
 
     def delete_video_list(self, item_id_list, function):
         """
+        Deletes each video in the given list from the project
         :list item_id_list: list of ids of videos to delete
         :return: some confirmation
         """
         return self.mutate_video_list(item_id_list, self.delete_video)
 
-    # collect annotations
     def collect_annotations(self, list_id):
         """
         :param list_id: str or int, refering to the list name or list_dbid
