@@ -18,10 +18,12 @@ class MeedanAPI:
     #     mirror Meedan's "item" object so that title, description, etc. are easily accessible
 
     def create_client(self):
-        """helper function to instantiate client for requests made with gql"""
+        """
+        Helper function to instantiate client using gql.
+        :return: client for requests
+        """
         if self.key is None:
             print("WARNING: COULD NOT LOAD MEEDAN KEY, QUERIES WILL FAIL")
-
         #TODO: catch any errors that might result from improper headers
         gql_transport=RequestsHTTPTransport(
             url=self.endpoint,
@@ -35,33 +37,24 @@ class MeedanAPI:
 
     def execute(self, query_string):
         """
-        Executes the given GraphQL query
+        Executes the given GraphQL query. Not user-facing, but called by user-facing functions.
         :str query_string: # the query_string such as in graphIQL
-        :return: API response (maybe as a dictionary)
-        """
-        # this function should not be user facing, but all user facing functions below should call it to execute queries.
-        # gql seems pretty good for that purpose (see from my previous code) but not necessary. Alternatively, forge http
-        # requests 'by hand' and send them with the 'requests' package
-        # 1) depending on how you want to send the queries, the query_string might need some formating
-        #    for instance, the escape char \ need to be doubled with gql
-        # 2) send the formatted query string to self.endpoint using package requests, gql, or which ever package you
-        #    find best appropriate to query graphQL APIs. Use self.headers to authenticate
-        # Catch and print API errors clearly to assist with debugging other functions
-
+        :return: API response as a dictionary
+        """        
         response, gql_query = None, None
         try:
             gql_query = gql.gql(query_string)
         except:
-            raise SyntaxError('GQL error formatting query: ' + query_string)
+            raise SyntaxError('GQL error formatting query:\n' + query_string)
         try:
             response = self.client.execute(gql_query)
         except Exception as e:
-            raise Exception('Server error on GQL query: ' + query_string + ' Error: ' + str(e))
+            raise Exception('Server error on GQL query:\n' + query_string + '\nError:\n' + str(e))
         return response
 
     def get_proj_id(self, slug, proj_dbid):
         """
-        Given a project list id or title, returns a string form of the list id formatted for GraphQL query
+        Given a project list id or title, returns a string form of the list id formatted for GraphQL query.
         :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
         :str or int proj_dbid: either the name of the list or the project dbid
         :str return: project dbid
@@ -92,7 +85,7 @@ class MeedanAPI:
 
     def format_item(self, item_id):
         """
-        Given a string id for a project media, formats for insertion into GraphQL query
+        Given a string id for a project media, formats for insertion into GraphQL query.
         :param items_ids: accepts single item id string or nonempty list of item id strings
         :return: string of item to be fed into query
         """
@@ -100,7 +93,7 @@ class MeedanAPI:
 
     def add_video(self, uri, list_id, slug):
         """
-        Adds the given YouTube video to the front of the given project list
+        Adds the given YouTube video to the front of the given project list.
         :str uri: 11 character string that serve as video identifier in a youtube url
         :param list_id: str or int, refering to the list name or list_dbid
         :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
@@ -125,11 +118,9 @@ class MeedanAPI:
             response = self.execute(query_string)
         except Exception as e:
             # if error code == 9:
-                # get id of this item
-                # call delete_video with this id in a list
-                # try to execute this query again
-            # else:
-                # print error message
+                # item_id = (get id of this item)
+                # assert self.delete_video(item_id), "Unable to delete video before adding - investigate error."
+                # response = self.execute(query_string)
             print(e)
         video_data = response["createProjectMedia"]["project_media"]
         title = video_data["title"]
@@ -138,7 +129,7 @@ class MeedanAPI:
 
     def update_video(self, item_id, archive):
         """
-        Helper function to trash or restore videos with the given id
+        Helper function to trash or restore videos with the given id.
         :str item_id: id of item to trash or restore
         :int archive: 0 to restore, 1 to trash
         :return: bool of whether expected response was received
@@ -153,11 +144,11 @@ class MeedanAPI:
           }) { affectedId }
         }''' % (self.format_item(item_id), str(archive))
         response = self.execute(query_string)
-        return response # TODO: affectedId == item_id
+        return response["updateProjectMedia"]["affectedId"] == item_id
 
     def trash_video(self, item_id):
         """
-        Sends given video to the trash
+        Sends given video to the trash.
         :str item_id: id of item to trash
         :return: some confirmation
         """
@@ -165,7 +156,7 @@ class MeedanAPI:
 
     def restore_video(self, item_id):
         """
-        Restores given video from the trash
+        Restores given video from the trash.
         :str item_id: id of item to restore
         :return: some confirmation
         """
@@ -173,7 +164,7 @@ class MeedanAPI:
 
     def delete_video(self, item_id):
         """
-        Removes given video from the project
+        Removes given video from the project.
         :str item_id: id of item to delete
         :return: some confirmation
         """
@@ -187,16 +178,13 @@ class MeedanAPI:
         try:
             response = self.execute(query_string)
         except:
-            try:
-                self.restore_video(item_id)
-                response = self.execute(query_string)
-            except Exception as e:
-                print(e)
-        return response # TODO: deletedId == item_id
+            self.restore_video(item_id)
+            response = self.execute(query_string)
+        return response["destroyProjectMedia"]["deletedId"] == item_id
 
     def mutate_video_list(self, item_id_list, function, list_id=None, slug=None):
         """
-        Helper function to perform some mutation on a list of videos
+        Helper function to perform some mutation on a list of videos.
         :list item_id_list: list of ids of videos to mutate (add, )
         :return: some confirmation
         """
@@ -207,13 +195,12 @@ class MeedanAPI:
                 success = function(item_id)
             else:
                 success = function(item_id, list_id, slug)
-            # TODO: if not success:
-                # raise exception
+            assert success, "Mutation could not be perform for item_id " + self.format_item(item_id) + "."
         return True
 
     def add_video_list(self, uri_list, list_id, slug):
         """
-        Adds each video in the given list to given project list
+        Adds each video in the given list to given project list.
         :list uri_list: list of strings that serve as video identifier in a youtube url
         :param list_id: str or int, refering to the list name or list_dbid
         :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
@@ -221,25 +208,25 @@ class MeedanAPI:
         """
         return self.mutate_video_list(uri_list, self.add_video, list_id, slug)
 
-    def trash_video_list(self, item_id_list, function):
+    def trash_video_list(self, item_id_list):
         """
-        Sends each video in the given list to the trash
+        Sends each video in the given list to the trash.
         :list item_id_list: list of ids of videos to trash
         :return: some confirmation
         """
         return self.mutate_video_list(item_id_list, self.trash_video)
 
-    def restore_video_list(self, item_id_list, function):
+    def restore_video_list(self, item_id_list):
         """
-        Restores each video in the given list from the trash
+        Restores each video in the given list from the trash.
         :list item_id_list: list of ids of videos to restore
         :return: some confirmation
         """
         return self.mutate_video_list(item_id_list, self.restore_video)
 
-    def delete_video_list(self, item_id_list, function):
+    def delete_video_list(self, item_id_list):
         """
-        Deletes each video in the given list from the project
+        Deletes each video in the given list from the project.
         :list item_id_list: list of ids of videos to delete
         :return: some confirmation
         """
