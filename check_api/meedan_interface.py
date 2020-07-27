@@ -117,11 +117,10 @@ class MeedanAPI:
         try:
             response = self.execute(query_string)
         except Exception as e:
-            # if error code == 9:
-                # item_id = (get id of this item)
-                # assert self.delete_video(item_id), "Unable to delete video before adding - investigate error."
-                # response = self.execute(query_string)
-            print(e)
+            # item_id = (get id of this item)
+            # assert self.delete_video(item_id), "Unable to delete video before adding - investigate error."
+            # response = self.execute(query_string)
+            pass
         video_data = response["createProjectMedia"]["project_media"]
         title = video_data["title"]
         id = video_data["id"]
