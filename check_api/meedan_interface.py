@@ -40,7 +40,7 @@ class MeedanAPI:
         Executes the given GraphQL query. Not user-facing, but called by user-facing functions.
         :str query_string: # the query_string such as in graphIQL
         :return: API response as a dictionary
-        """        
+        """
         response, gql_query = None, None
         try:
             gql_query = gql.gql(query_string)
@@ -101,7 +101,7 @@ class MeedanAPI:
         """
         url = 'https://www.youtube.com/watch?v=' + uri
         query_string = '''mutation {
-          createProjectMedia(input: {
+          createsProjectMedia(input: {
             clientMutationId: "1",
             add_to_project_id: %s,
             url: "%s"
@@ -113,14 +113,11 @@ class MeedanAPI:
           }
         }''' % (self.get_proj_id(slug, list_id), url)
         response = None
-        # TODO: if exception raised, if error code 9, remove_video and try again. else, print error
         try:
             response = self.execute(query_string)
         except Exception as e:
-            # item_id = (get id of this item)
-            # assert self.delete_video(item_id), "Unable to delete video before adding - investigate error."
-            # response = self.execute(query_string)
-            pass
+            print(e)
+            return
         video_data = response["createProjectMedia"]["project_media"]
         title = video_data["title"]
         id = video_data["id"]
@@ -167,6 +164,7 @@ class MeedanAPI:
         :str item_id: id of item to delete
         :return: some confirmation
         """
+        pass
         query_string = '''mutation {
           destroyProjectMedia(input: {
             clientMutationId: "1",
