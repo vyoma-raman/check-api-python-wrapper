@@ -70,7 +70,7 @@ class TestAPI(unittest.TestCase):
     def test_add(self):
         video_id_dict = self.meedan_api.add_video("XpqqjU7u5Yc", "#Wietske", "ischool-hrc")
         # response = self.meedan_api.delete_video(list(video_id_dict.values())[0])
-        print(self.meedan_api.format_item(list(video_id_dict.values())[0]))
+        # print(self.meedan_api.format_item(list(video_id_dict.values())[0]))
 
     def test_add_list(self):
         response = self.meedan_api.add_video_list(["XpqqjU7u5Yc", "DqZS89jFCFg", "I_izvAbhExY"], "#Wietske", "ischool-hrc")

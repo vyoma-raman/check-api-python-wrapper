@@ -113,14 +113,10 @@ class MeedanAPI:
           }
         }''' % (self.get_proj_id(slug, list_id), url)
         response = None
-        # TODO: if exception raised, if error code 9, remove_video and try again. else, print error
         try:
             response = self.execute(query_string)
         except Exception as e:
-            # item_id = (get id of this item)
-            # assert self.delete_video(item_id), "Unable to delete video before adding - investigate error."
-            # response = self.execute(query_string)
-            pass
+            print(e)
         video_data = response["createProjectMedia"]["project_media"]
         title = video_data["title"]
         id = video_data["id"]
@@ -231,9 +227,42 @@ class MeedanAPI:
         """
         return self.mutate_video_list(item_id_list, self.delete_video)
 
-    def collect_annotations(self, list_id):
+    def collect_annotations(self, list_id, slug):
         """
         :param list_id: str or int, refering to the list name or list_dbid
+        :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
         :return: annotations
         """
-        pass
+        annotations_query = '''query { project(id: "%s") {
+            project_medias {
+              edges {
+                node {
+                  title,
+                  status,
+                  tags {
+                    edges {
+                      node {
+                        tag_text
+                      }
+                    }
+                  },
+                  media {
+                    url
+                  }
+                }
+              }
+            }
+          }
+        }''' % (self.get_proj_id(slug, list_id))
+        response = self.execute(annotations_query)
+        cleaned = util.pivot_dict(util.strip(response), "title", ["media", "status", "tags"])
+        reorganized = {}
+        for k, v in cleaned.items():
+            sub_dict = {}
+            sub_dict['status'] = v[1]
+            sub_dict['tags'] = []
+            for node in v[2]['edges']:
+                tags.append(node['node']['tag_text'])
+            sub_dict['tags'] = tags
+            reorganized[v[0]['url'][-11:]] = sub_dict
+        return reorganized

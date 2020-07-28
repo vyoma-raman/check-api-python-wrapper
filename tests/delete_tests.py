@@ -18,8 +18,8 @@ class TestAPI(unittest.TestCase):
         self.assertTrue(response)
 
     def test_delete_list(self):
-    	response = self.meedan_api.delete_video_list(["UHJvamVjdE1lZGlhLzM5MzcwNA==\n", "UHJvamVjdE1lZGlhLzM5MzcwMw==\n",
-    		"UHJvamVjdE1lZGlhLzM5MzcwMg==\n"])
+        response = self.meedan_api.delete_video_list(["UHJvamVjdE1lZGlhLzM5MzcwNA==\n", "UHJvamVjdE1lZGlhLzM5MzcwMw==\n",
+            "UHJvamVjdE1lZGlhLzM5MzcwMg==\n"])
         self.assertTrue(response)
 
 if __name__ == '__main__':
