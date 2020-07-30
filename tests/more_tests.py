@@ -16,8 +16,38 @@ class TestAPI(unittest.TestCase):
 
     def test(self):
         # response = self.meedan_api.add_video("DqZS89jFCFg", "#Wietske", "ischool-hrc")
-        response = self.meedan_api.collect_annotations("#Wietske", 'ischool-hrc')
-        print(response)
+        # response = self.meedan_api.collect_annotations("#Wietske", 'ischool-hrc')
+        # print(response)
+        query_string = """query {
+          team(slug: "ischool-hrc") {
+            projects {
+              edges {
+                node {
+                  title
+                  dbid
+                  project_medias {
+                    edges {
+                      node {
+                        media {
+                          url
+                        }
+                        title
+                        tags {
+                          edges {
+                            node {
+                              tag_text
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }"""
+        print(self.meedan_api.execute(query_string))
 
 if __name__ == '__main__':
     unittest.main()

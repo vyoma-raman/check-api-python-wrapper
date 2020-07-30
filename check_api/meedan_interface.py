@@ -114,9 +114,8 @@ class MeedanAPI:
         }''' % (self.get_proj_id(slug, list_id), url)
         response = self.execute(query_string)
         video_data = response["createProjectMedia"]["project_media"]
-        title = video_data["title"]
-        id = video_data["id"]
-        return {title: id}
+        video_id = video_data["id"]
+        return {uri: video_id}
 
     def update_video(self, item_id, archive):
         """
@@ -159,7 +158,6 @@ class MeedanAPI:
         :str item_id: id of item to delete
         :return: some confirmation
         """
-        pass
         query_string = '''mutation {
           destroyProjectMedia(input: {
             clientMutationId: "1",
@@ -174,7 +172,24 @@ class MeedanAPI:
             response = self.execute(query_string)
         return response["destroyProjectMedia"]["deletedId"] == item_id
 
-    def mutate_video_list(self, item_id_list, function, list_id=None, slug=None):
+    def add_video_list(self, uri_list, list_id, slug):
+        """
+        Adds each video in the given list to given project list.
+        :list uri_list: list of strings that serve as video identifier in a youtube url
+        :param list_id: str or int, refering to the list name or list_dbid
+        :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
+        :return: dictionary with uri as key and projectmedia id as value
+        """
+        if len(uri_list) == 0:
+            raise Exception("Please specify item(s) to add.")
+        id_dict = {}
+        for uri in uri_list:
+            success = self.add_video(uri, list_id, slug)
+            assert success, 'Mutation could not be perform for video "' + uri + '".'
+            id_dict.update(success)
+        return id_dict
+
+    def mutate_video_list(self, item_id_list, function):
         """
         Helper function to perform some mutation on a list of videos.
         :list item_id_list: list of ids of videos to mutate (add, )
@@ -183,22 +198,9 @@ class MeedanAPI:
         if len(item_id_list) == 0:
             raise Exception("Please specify item(s) to mutate.")
         for item_id in item_id_list:
-            if not list_id:
-                success = function(item_id)
-            else:
-                success = function(item_id, list_id, slug)
+            success = function(item_id)
             assert success, "Mutation could not be perform for item_id " + self.format_item(item_id) + "."
         return True
-
-    def add_video_list(self, uri_list, list_id, slug):
-        """
-        Adds each video in the given list to given project list.
-        :list uri_list: list of strings that serve as video identifier in a youtube url
-        :param list_id: str or int, refering to the list name or list_dbid
-        :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
-        :return: some confirmation
-        """
-        return self.mutate_video_list(uri_list, self.add_video, list_id, slug)
 
     def trash_video_list(self, item_id_list):
         """
