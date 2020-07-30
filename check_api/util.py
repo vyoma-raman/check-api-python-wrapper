@@ -1,3 +1,4 @@
+import time
 def strip(query_response):
     """
     :str query_response: the dictionary that you want to flatten into a list
@@ -35,3 +36,6 @@ def pivot_dict(nodes, key, values):
             new_values = node[values]
         new_dict[node[key]] = new_values
     return new_dict
+
+def epoch_to_datetime(epoch):
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(epoch))
