@@ -9,7 +9,7 @@ class TestAPI(unittest.TestCase):
 
     def setUp(self):
         self.key = os.environ.get('MEEDAN_KEY')
-        self.meedan_api = MeedanAPI(self.key)
+        self.meedan_api = MeedanAPI(self.key, "ischool-hrc")
         warnings.simplefilter("ignore", ResourceWarning)
 
     #TODO: Finish fleshing out tests once method is completed
@@ -18,7 +18,7 @@ class TestAPI(unittest.TestCase):
         self.assertTrue(response)
 
     def test_restore_list(self):
-        response = self.meedan_api.restore_video_list(["UHJvamVjdE1lZGlhLzM5MzY5Mg==\n", "UHJvamVjdE1lZGlhLzM5MzQ3Nw==\n", 
+        response = self.meedan_api.restore_video_list(["UHJvamVjdE1lZGlhLzM5MzY5Mg==\n", "UHJvamVjdE1lZGlhLzM5MzQ3Nw==\n",
             "UHJvamVjdE1lZGlhLzM5MDc5MA==\n"])
         self.assertTrue(response)
 

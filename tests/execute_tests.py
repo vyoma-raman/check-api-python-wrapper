@@ -10,7 +10,7 @@ class TestAPI(unittest.TestCase):
 
     def setUp(self):
         self.key = os.environ.get('MEEDAN_KEY')
-        self.meedan_api = MeedanAPI(self.key)
+        self.meedan_api = MeedanAPI(self.key, "ischool-hrc")
         warnings.simplefilter("ignore", ResourceWarning)
 
     def test_teaminfo(self):

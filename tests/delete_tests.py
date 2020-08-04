@@ -9,7 +9,7 @@ class TestAPI(unittest.TestCase):
 
     def setUp(self):
         self.key = os.environ.get('MEEDAN_KEY')
-        self.meedan_api = MeedanAPI(self.key)
+        self.meedan_api = MeedanAPI(self.key, "ischool-hrc")
         warnings.simplefilter("ignore", ResourceWarning)
 
     #TODO: Finish fleshing out tests once method is completed

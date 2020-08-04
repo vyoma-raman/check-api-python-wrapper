@@ -11,7 +11,7 @@ class TestAPI(unittest.TestCase):
 
     def setUp(self):
         self.key = os.environ.get('MEEDAN_KEY')
-        self.meedan_api = MeedanAPI(self.key)
+        self.meedan_api = MeedanAPI(self.key, "ischool-hrc")
         warnings.simplefilter("ignore", ResourceWarning)
 
     def test_strip(self):
@@ -62,18 +62,18 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(util.pivot_dict(xr_nodes, "title", ["dbid", "id"]), xr_pivot2, "Pivot function failed on value lists")
 
     def test_get_list_id(self):
-        id = self.meedan_api.get_proj_id("ischool-hrc", "#Nicole")
+        id = self.meedan_api.get_proj_id("#Nicole")
         self.assertEqual(id, "3141")
-        id = self.meedan_api.get_proj_id("ischool-hrc", "#Vyoma")
+        id = self.meedan_api.get_proj_id("#Vyoma")
         self.assertEqual(id, "3135")
 
     def test_add(self):
-        video_id_dict = self.meedan_api.add_video("XpqqjU7u5Yc", "#Wietske", "ischool-hrc")
+        video_id_dict = self.meedan_api.add_video("XpqqjU7u5Yc", "#Wietske")
         # response = self.meedan_api.delete_video(list(video_id_dict.values())[0])
         # print(self.meedan_api.format_item(list(video_id_dict.values())[0]))
 
     def test_add_list(self):
-        response = self.meedan_api.add_video_list(["XpqqjU7u5Yc", "DqZS89jFCFg", "I_izvAbhExY"], "#Wietske", "ischool-hrc")
+        response = self.meedan_api.add_video_list(["XpqqjU7u5Yc", "DqZS89jFCFg", "I_izvAbhExY"], "#Wietske")
         self.assertTrue(response)
 
 if __name__ == '__main__':

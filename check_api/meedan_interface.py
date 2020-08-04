@@ -3,17 +3,18 @@ import util
 from gql.transport.requests import RequestsHTTPTransport
 
 class MeedanAPI:
-    def __init__(self, key): # add more arguments if needed
+    def __init__(self, key, slug): # add more arguments if needed
         """
         :param key: API key
         """
         self.key = key
-        self.endpoint = 'https://check-api.checkmedia.org/api/graphql'
+        self.slug = slug
+        self.endpoint = 'https://check-api.checkmedia.org/api/graphql?team=' + self.slug
         self.headers = {"X-Check-Token": self.key, "Content-Type" : 'application/json'}
         self.client = self.create_client()
 
     # NOTES:
-    #   - Potential future changes: create Python "item" class to mirror Meedan's "item" 
+    #   - Potential future changes: create Python "item" class to mirror Meedan's "item"
     #     object so that title, description, etc. are easily accessible
 
     def create_client(self):
@@ -51,10 +52,9 @@ class MeedanAPI:
             raise Exception('Server error on GQL query:\n' + query_string + '\nError:\n' + str(e))
         return response
 
-    def get_proj_id(self, slug, proj_dbid):
+    def get_proj_id(self, proj_dbid):
         """
         Given a project list id or title, returns a string form of the list id formatted for GraphQL query.
-        :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
         :str or int proj_dbid: either the name of the list or the project dbid
         :str return: project dbid
         """
@@ -73,7 +73,7 @@ class MeedanAPI:
                 }
               }
             }
-            ''' % (slug)
+            ''' % (self.slug)
             response = self.execute(proj_query)
             # Extract list of projects
             proj_nodes = util.strip(response)
@@ -90,12 +90,11 @@ class MeedanAPI:
         """
         return repr(item_id).replace("'", '"')
 
-    def add_video(self, uri, list_id, slug):
+    def add_video(self, uri, list_id):
         """
         Adds the given YouTube video to the front of the given project list.
         :str uri: 11 character string that serve as video identifier in a youtube url
         :param list_id: str or int, refering to the list name or list_dbid
-        :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
         :return: bool of whether expected response was received
         """
         url = 'https://www.youtube.com/watch?v=' + uri
@@ -110,7 +109,7 @@ class MeedanAPI:
               id
             }
           }
-        }''' % (self.get_proj_id(slug, list_id), url)
+        }''' % (self.get_proj_id(list_id), url)
         response = self.execute(query_string)
         video_data = response["createProjectMedia"]["project_media"]
         video_id = video_data["id"]
@@ -171,7 +170,7 @@ class MeedanAPI:
             response = self.execute(query_string)
         return response["destroyProjectMedia"]["deletedId"] == item_id
 
-    def add_video_list(self, uri_list, list_id, slug):
+    def add_video_list(self, uri_list, list_id):
         """
         Adds each video in the given list to given project list.
         :list uri_list: list of strings that serve as video identifier in a youtube url
@@ -184,7 +183,7 @@ class MeedanAPI:
         id_dict = {}
         for uri in uri_list:
             try:
-                success = self.add_video(uri, list_id, slug)
+                success = self.add_video(uri, list_id, self.slug)
                 id_dict.update(success)
             except:
                 print('Could not add video "' + uri + '".\nAdded items:')
@@ -228,12 +227,11 @@ class MeedanAPI:
         """
         return self.mutate_video_list(item_id_list, self.delete_video)
 
-    def collect_annotations(self, slug, in_trash=False):
+    def collect_annotations(self, in_trash=False):
         """
-        Gets the uri, id, dbid, verification status, tags, verifier, verification date, and 
+        Gets the uri, id, dbid, verification status, tags, verifier, verification date, and
         comments of each annotation
         :param list_id: str or int, refering to the list name or list_dbid
-        :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
         :bool in_trash: whether to return the annotations for items in trash
         :return: annotations
         """
@@ -276,7 +274,7 @@ class MeedanAPI:
               }
             }
           }
-        }''' % (slug)
+        }''' % (self.slug)
         response = self.execute(annotations_query)
         return self.format_response(response, in_trash)
 
@@ -286,7 +284,6 @@ class MeedanAPI:
         :int dbid: Meedan's dbid identifier for a particular piece of content
         :return: list of comment texts
         """
-        print("dbid:",dbid)
         query_string = """query {
           project_media(ids: "%s") {
             annotations(annotation_type: "comment") {
@@ -300,9 +297,10 @@ class MeedanAPI:
             }
           }
         }""" % (str(dbid))
-        print(query_string)
         response = self.execute(query_string)
-        return [edge['node']['text'] for edge in util.strip(response)]
+        text = [edge['node']['text'] for edge in util.strip(response)]
+        #print(text)
+        return text
 
     def format_response(self, response, in_trash):
         """

@@ -11,12 +11,13 @@ class TestAPI(unittest.TestCase):
 
     def setUp(self):
         self.key = os.environ.get('MEEDAN_KEY')
-        self.meedan_api = MeedanAPI(self.key)
+        self.meedan_api = MeedanAPI(self.key, "ischool-hrc")
         warnings.simplefilter("ignore", ResourceWarning)
 
     def test(self):
-        #response = self.meedan_api.collect_annotations('ischool-hrc')
-        self.meedan_api.add_video()
+        response = self.meedan_api.collect_annotations()
+        print(response)
+        #self.meedan_api.add_video()
 
 if __name__ == '__main__':
     unittest.main()
