@@ -13,9 +13,8 @@ class MeedanAPI:
         self.client = self.create_client()
 
     # NOTES:
-    #   - Suggestion: define parsers separately to parse the API responses (see YouTubeAPI package)
-    #   - Potential future changes: design functions to take iterables or single values; create Python "item" class to
-    #     mirror Meedan's "item" object so that title, description, etc. are easily accessible
+    #   - Potential future changes: create Python "item" class to mirror Meedan's "item" 
+    #     object so that title, description, etc. are easily accessible
 
     def create_client(self):
         """
@@ -101,7 +100,7 @@ class MeedanAPI:
         """
         url = 'https://www.youtube.com/watch?v=' + uri
         query_string = '''mutation {
-          createsProjectMedia(input: {
+          createProjectMedia(input: {
             clientMutationId: "1",
             add_to_project_id: %s,
             url: "%s"
@@ -184,9 +183,12 @@ class MeedanAPI:
             raise Exception("Please specify item(s) to add.")
         id_dict = {}
         for uri in uri_list:
-            success = self.add_video(uri, list_id, slug)
-            assert success, 'Mutation could not be perform for video "' + uri + '".'
-            id_dict.update(success)
+            try:
+                success = self.add_video(uri, list_id, slug)
+                id_dict.update(success)
+            except:
+                print('Could not add video "' + uri + '".\nAdded items:')
+                return id_dict
         return id_dict
 
     def mutate_video_list(self, item_id_list, function):
@@ -199,7 +201,7 @@ class MeedanAPI:
             raise Exception("Please specify item(s) to mutate.")
         for item_id in item_id_list:
             success = function(item_id)
-            assert success, "Mutation could not be perform for item_id " + self.format_item(item_id) + "."
+            assert success, "Mutation could not be performed for item_id " + self.format_item(item_id) + "."
         return True
 
     def trash_video_list(self, item_id_list):
@@ -226,42 +228,107 @@ class MeedanAPI:
         """
         return self.mutate_video_list(item_id_list, self.delete_video)
 
-    def collect_annotations(self, list_id, slug):
+    def collect_annotations(self, slug, in_trash=False):
         """
+        Gets the uri, id, dbid, verification status, tags, verifier, verification date, and 
+        comments of each annotation
         :param list_id: str or int, refering to the list name or list_dbid
         :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
+        :bool in_trash: whether to return the annotations for items in trash
         :return: annotations
         """
-        annotations_query = '''query { project(id: "%s") {
-            project_medias {
+        annotations_query = '''query {
+          team(slug: "%s") {
+            projects {
               edges {
                 node {
-                  title,
-                  status,
-                  tags {
+                  project_medias {
                     edges {
                       node {
-                        tag_text
+                        media {
+                          url
+                        }
+                        dbid
+                        archived
+                        title
+                        status
+                        tags {
+                          edges {
+                            node {
+                              tag_text
+                            }
+                          }
+                        }
+                        updated_at
+                        dynamic_annotations_verification_status {
+                          edges {
+                            node {
+                              annotator {
+                                name
+                              }
+                            }
+                          }
+                        }
                       }
                     }
-                  },
-                  media {
-                    url
                   }
                 }
               }
             }
           }
-        }''' % (self.get_proj_id(slug, list_id))
+        }''' % (slug)
         response = self.execute(annotations_query)
-        cleaned = util.pivot_dict(util.strip(response), "title", ["media", "status", "tags"])
+        return self.format_response(response, in_trash)
+
+    def collect_comments(self, dbid):
+        """
+        Helper function that gets comments on a project_media
+        :int dbid: Meedan's dbid identifier for a particular piece of content
+        :return: list of comment texts
+        """
+        print("dbid:",dbid)
+        query_string = """query {
+          project_media(ids: "%s") {
+            annotations(annotation_type: "comment") {
+              edges {
+                node {
+                  ... on Comment {
+                    text
+                  }
+                }
+              }
+            }
+          }
+        }""" % (str(dbid))
+        print(query_string)
+        response = self.execute(query_string)
+        return [edge['node']['text'] for edge in util.strip(response)]
+
+    def format_response(self, response, in_trash):
+        """
+        Helper function that formats comments and other annotations
+        :dict response: response from server
+        :bool comment: whether the response is from collect_comments
+        """
+        all_nodes = []
+        for node in util.strip(response):
+            all_nodes.extend(util.strip(node))
+        cleaned = {}
+        for node in all_nodes:
+            node = node["node"]
+            title = node.pop("title")
+            cleaned[title] = node
         reorganized = {}
         for k, v in cleaned.items():
-            sub_dict = {}
-            sub_dict['status'] = v[1]
-            sub_dict['tags'] = []
-            for node in v[2]['edges']:
-                tags.append(node['node']['tag_text'])
-            sub_dict['tags'] = tags
-            reorganized[v[0]['url'][-11:]] = sub_dict
+            if in_trash or not v["archived"]:
+                sub_dict = {}
+                sub_dict['status'] = v["status"]
+                tags = []
+                for node in v["tags"]['edges']:
+                    tags.append(node['node']['tag_text'])
+                sub_dict['tags'] = tags
+                sub_dict['last_updated'] = util.epoch_to_datetime(v["updated_at"])
+                sub_dict['notes'] = self.collect_comments(v["dbid"])
+                sub_dict['last_updated_by'] = v['dynamic_annotations_verification_status']['edges'][0]['node']['annotator']['name']
+                reorganized[v["media"]['url'][-11:]] = sub_dict
         return reorganized

@@ -29,13 +29,13 @@ def pivot_dict(nodes, key, values):
         new_values = None
         if isinstance(values, list):
             new_values = []
-            for key, value in node.items():
-                if key in values:
-                    new_values.append(value)
+            for k, v in node.items():
+                if k in values:
+                    new_values.append(v)
         else:
             new_values = node[values]
         new_dict[node[key]] = new_values
     return new_dict
 
 def epoch_to_datetime(epoch):
-    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(epoch))
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(epoch)))
