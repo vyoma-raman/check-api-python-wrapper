@@ -1,8 +1,10 @@
 import time
+
 def strip(query_response):
     """
-    :str query_response: the dictionary that you want to flatten into a list
-    :return: a list of nodes
+    Flattens dictionary into a list.
+    :dict query_response: response dictionary to flatten
+    :list return: nodes from response
     """
     nodes = []
     for key, value in query_response.items():
@@ -18,10 +20,10 @@ def strip(query_response):
 
 def pivot_dict(nodes, key, values):
     """
-    :list nodes: list of nodes - each node is a dictionary
+    :list nodes: nodes to pivot - each node is a dictionary
     :str key: the key to pivot on
-    :str or list values: the new values of the dictionary
-    :return: new dictionary
+    :param values: str or list, the new values of the dictionary
+    :dict return: dictionary pivoted on given key
     """
     new_dict = {}
     for node in nodes:

@@ -3,7 +3,7 @@ import util
 from gql.transport.requests import RequestsHTTPTransport
 
 class MeedanAPI:
-    def __init__(self, key, slug): # add more arguments if needed
+    def __init__(self, key, slug):
         """
         :param key: API key
         """
@@ -12,10 +12,6 @@ class MeedanAPI:
         self.endpoint = 'https://check-api.checkmedia.org/api/graphql?team=' + self.slug
         self.headers = {"X-Check-Token": self.key, "Content-Type" : 'application/json'}
         self.client = self.create_client()
-
-    # NOTES:
-    #   - Potential future changes: create Python "item" class to mirror Meedan's "item"
-    #     object so that title, description, etc. are easily accessible
 
     def create_client(self):
         """
@@ -35,11 +31,13 @@ class MeedanAPI:
         )
         return client
 
+    # USER-FACING FUNCTION
+
     def execute(self, query_string):
         """
-        Executes the given GraphQL query. Not user-facing, but called by user-facing functions.
-        :str query_string: # the query_string such as in graphIQL
-        :return: API response as a dictionary
+        Executes the given GraphQL query. Not usually user-facing, but called by all user-facing functions.
+        :str query_string: the string of the query to run, such as in GraphiQL
+        :dict return: API response
         """
         response, gql_query = None, None
         try:
@@ -55,7 +53,7 @@ class MeedanAPI:
     def get_proj_id(self, proj_dbid):
         """
         Given a project list id or title, returns a string form of the list id formatted for GraphQL query.
-        :str or int proj_dbid: either the name of the list or the project dbid
+        :param proj_dbid: str or int, either the name of the list or the project dbid
         :str return: project dbid
         """
         if isinstance(proj_dbid, str):
@@ -75,8 +73,10 @@ class MeedanAPI:
             }
             ''' % (self.slug)
             response = self.execute(proj_query)
+
             # Extract list of projects
             proj_nodes = util.strip(response)
+
             # Create new dictionary where the project titles are the keys
             proj_dict = util.pivot_dict(proj_nodes, "title", "dbid")
             proj_dbid = proj_dict[proj_dbid]
@@ -86,16 +86,18 @@ class MeedanAPI:
         """
         Given a string id for a project media, formats for insertion into GraphQL query.
         :param items_ids: accepts single item id string or nonempty list of item id strings
-        :return: string of item to be fed into query
+        :str return: string-formatted id of item to be fed into query
         """
         return repr(item_id).replace("'", '"')
+
+    # USER-FACING FUNCTION
 
     def add_video(self, uri, list_id):
         """
         Adds the given YouTube video to the front of the given project list.
         :str uri: 11 character string that serve as video identifier in a youtube url
         :param list_id: str or int, refering to the list name or list_dbid
-        :return: bool of whether expected response was received
+        :dict return: single-item dictionary with uri as key and id as value
         """
         url = 'https://www.youtube.com/watch?v=' + uri
         query_string = '''mutation {
@@ -120,7 +122,7 @@ class MeedanAPI:
         Helper function to trash or restore videos with the given id.
         :str item_id: id of item to trash or restore
         :int archive: 0 to restore, 1 to trash
-        :return: bool of whether expected response was received
+        :bool return: whether expected response was received
         """
         if len(item_id) == 0:
             raise Exception("Please specify item(s) to restore from trash.")
@@ -134,27 +136,33 @@ class MeedanAPI:
         response = self.execute(query_string)
         return response["updateProjectMedia"]["affectedId"] == item_id
 
+    # USER-FACING FUNCTION
+
     def trash_video(self, item_id):
         """
         Sends given video to the trash.
         :str item_id: id of item to trash
-        :return: some confirmation
+        :bool return: result of calling update_video with specified arguments
         """
         return self.update_video(item_id, 1)
+
+    # USER-FACING FUNCTION
 
     def restore_video(self, item_id):
         """
         Restores given video from the trash.
         :str item_id: id of item to restore
-        :return: some confirmation
+        :bool return: result of calling update_video specified arguments
         """
         return self.update_video(item_id, 0)
+
+    # USER-FACING FUNCTION
 
     def delete_video(self, item_id):
         """
         Removes given video from the project.
         :str item_id: id of item to delete
-        :return: some confirmation
+        :bool return: whether expected response was received
         """
         query_string = '''mutation {
           destroyProjectMedia(input: {
@@ -170,13 +178,14 @@ class MeedanAPI:
             response = self.execute(query_string)
         return response["destroyProjectMedia"]["deletedId"] == item_id
 
+    # USER-FACING FUNCTION
+
     def add_video_list(self, uri_list, list_id):
         """
         Adds each video in the given list to given project list.
         :list uri_list: list of strings that serve as video identifier in a youtube url
         :param list_id: str or int, refering to the list name or list_dbid
-        :str slug: name of team found in URL, ex: checkmedia.org/ischool-hrc => ischool-hrc
-        :return: dictionary with uri as key and projectmedia id as value
+        :dict return: multi-item dictionary with uri as key and id as value
         """
         if len(uri_list) == 0:
             raise Exception("Please specify item(s) to add.")
@@ -187,14 +196,13 @@ class MeedanAPI:
                 id_dict.update(success)
             except:
                 print('Could not add video "' + uri + '".\nAdded items:')
-                return id_dict
         return id_dict
 
     def mutate_video_list(self, item_id_list, function):
         """
         Helper function to perform some mutation on a list of videos.
         :list item_id_list: list of ids of videos to mutate (add, )
-        :return: some confirmation
+        :bool return: True
         """
         if len(item_id_list) == 0:
             raise Exception("Please specify item(s) to mutate.")
@@ -203,29 +211,37 @@ class MeedanAPI:
             assert success, "Mutation could not be performed for item_id " + self.format_item(item_id) + "."
         return True
 
+    # USER-FACING FUNCTION
+
     def trash_video_list(self, item_id_list):
         """
         Sends each video in the given list to the trash.
         :list item_id_list: list of ids of videos to trash
-        :return: some confirmation
+        :bool return: result of calling mutate_video_list with specified arguments
         """
         return self.mutate_video_list(item_id_list, self.trash_video)
+
+    # USER-FACING FUNCTION
 
     def restore_video_list(self, item_id_list):
         """
         Restores each video in the given list from the trash.
         :list item_id_list: list of ids of videos to restore
-        :return: some confirmation
+        :bool return: result of calling mutate_video_list with specified arguments
         """
         return self.mutate_video_list(item_id_list, self.restore_video)
+
+    # USER-FACING FUNCTION
 
     def delete_video_list(self, item_id_list):
         """
         Deletes each video in the given list from the project.
         :list item_id_list: list of ids of videos to delete
-        :return: some confirmation
+        :bool return: result of calling mutate_video_list with specified arguments
         """
         return self.mutate_video_list(item_id_list, self.delete_video)
+
+    # USER-FACING FUNCTION
 
     def collect_annotations(self, in_trash=False):
         """
@@ -233,7 +249,7 @@ class MeedanAPI:
         comments of each annotation
         :param list_id: str or int, refering to the list name or list_dbid
         :bool in_trash: whether to return the annotations for items in trash
-        :return: annotations
+        :dict return: organized dictionary of annotations
         """
         annotations_query = '''query {
           team(slug: "%s") {
@@ -282,7 +298,7 @@ class MeedanAPI:
         """
         Helper function that gets comments on a project_media
         :int dbid: Meedan's dbid identifier for a particular piece of content
-        :return: list of comment texts
+        :list return: text of each comment
         """
         query_string = """query {
           project_media(ids: "%s") {
@@ -299,7 +315,6 @@ class MeedanAPI:
         }""" % (str(dbid))
         response = self.execute(query_string)
         text = [edge['node']['text'] for edge in util.strip(response)]
-        #print(text)
         return text
 
     def format_response(self, response, in_trash):
@@ -307,15 +322,19 @@ class MeedanAPI:
         Helper function that formats comments and other annotations
         :dict response: response from server
         :bool comment: whether the response is from collect_comments
+        :dict return: response organized by media uri
         """
+        # Create flat list of all nodes
         all_nodes = []
         for node in util.strip(response):
             all_nodes.extend(util.strip(node))
+        # Create dictionary with 'title' as key and other fields as values
         cleaned = {}
         for node in all_nodes:
             node = node["node"]
             title = node.pop("title")
             cleaned[title] = node
+        # Create single-nest dictionary from 'cleaned' with 'uri' as key
         reorganized = {}
         for k, v in cleaned.items():
             if in_trash or not v["archived"]:
