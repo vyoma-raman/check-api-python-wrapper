@@ -13,6 +13,8 @@ class MeedanAPI:
         self.headers = {"X-Check-Token": self.key, "Content-Type" : 'application/json'}
         self.client = self.create_client()
 
+    # HELPER FUNCTION
+
     def create_client(self):
         """
         Helper function to instantiate client using gql.
@@ -20,7 +22,6 @@ class MeedanAPI:
         """
         if self.key is None:
             print("WARNING: COULD NOT LOAD MEEDAN KEY, QUERIES WILL FAIL")
-        #TODO: catch any errors that might result from improper headers
         gql_transport=RequestsHTTPTransport(
             url=self.endpoint,
             headers=self.headers,
@@ -31,7 +32,7 @@ class MeedanAPI:
         )
         return client
 
-    # USER-FACING FUNCTION
+    # USER-FACING AND HELPER FUNCTION
 
     def execute(self, query_string):
         """
@@ -49,6 +50,8 @@ class MeedanAPI:
         except Exception as e:
             raise Exception('Server error on GQL query:\n' + query_string + '\nError:\n' + str(e))
         return response
+
+    # HELPER FUNCTION
 
     def get_proj_id(self, proj_dbid):
         """
@@ -82,14 +85,6 @@ class MeedanAPI:
             proj_dbid = proj_dict[proj_dbid]
         return str(proj_dbid)
 
-    def format_item(self, item_id):
-        """
-        Given a string id for a project media, formats for insertion into GraphQL query.
-        :param items_ids: accepts single item id string or nonempty list of item id strings
-        :str return: string-formatted id of item to be fed into query
-        """
-        return repr(item_id).replace("'", '"')
-
     # USER-FACING FUNCTION
 
     def add_video(self, uri, list_id):
@@ -117,6 +112,8 @@ class MeedanAPI:
         video_id = video_data["id"]
         return {uri: video_id}
 
+    # HELPER FUNCTION
+
     def update_video(self, item_id, archive):
         """
         Helper function to trash or restore videos with the given id.
@@ -132,7 +129,7 @@ class MeedanAPI:
             id: %s,
             archived: %s
           }) { affectedId }
-        }''' % (self.format_item(item_id), str(archive))
+        }''' % (util.format_item(item_id), str(archive))
         response = self.execute(query_string)
         return response["updateProjectMedia"]["affectedId"] == item_id
 
@@ -169,7 +166,7 @@ class MeedanAPI:
             clientMutationId: "1",
             id: %s
           }) { deletedId }
-        }''' % (self.format_item(item_id))
+        }''' % (util.format_item(item_id))
         response = None
         try:
             response = self.execute(query_string)
@@ -192,11 +189,14 @@ class MeedanAPI:
         id_dict = {}
         for uri in uri_list:
             try:
-                success = self.add_video(uri, list_id, self.slug)
+                success = self.add_video(uri, list_id)
                 id_dict.update(success)
-            except:
-                print('Could not add video "' + uri + '".\nAdded items:')
+            except Exception as e:
+                print('Could not add video "' + uri + '".\nAdded items:', id_dict.values())
+                print(e)
         return id_dict
+
+    # HELPER FUNCTION
 
     def mutate_video_list(self, item_id_list, function):
         """
@@ -208,7 +208,7 @@ class MeedanAPI:
             raise Exception("Please specify item(s) to mutate.")
         for item_id in item_id_list:
             success = function(item_id)
-            assert success, "Mutation could not be performed for item_id " + self.format_item(item_id) + "."
+            assert success, "Mutation could not be performed for item_id " + util.format_item(item_id) + "."
         return True
 
     # USER-FACING FUNCTION
@@ -251,7 +251,7 @@ class MeedanAPI:
         :bool in_trash: whether to return the annotations for items in trash
         :dict return: organized dictionary of annotations
         """
-        annotations_query = '''query {
+        query_string = '''query {
           team(slug: "%s") {
             projects {
               edges {
@@ -291,8 +291,10 @@ class MeedanAPI:
             }
           }
         }''' % (self.slug)
-        response = self.execute(annotations_query)
+        response = self.execute(query_string)
         return self.format_response(response, in_trash)
+
+    # HELPER FUNCTION
 
     def collect_comments(self, dbid):
         """
@@ -316,6 +318,8 @@ class MeedanAPI:
         response = self.execute(query_string)
         text = [edge['node']['text'] for edge in util.strip(response)]
         return text
+
+    # HELPER FUNCTION
 
     def format_response(self, response, in_trash):
         """

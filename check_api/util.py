@@ -40,4 +40,18 @@ def pivot_dict(nodes, key, values):
     return new_dict
 
 def epoch_to_datetime(epoch):
+    """
+    Turns epoch datetime into human-readable datetime
+    :str epoch: string of digits representing epoch time
+    :str return: human-readable datetime
+    """
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(epoch)))
+
+
+def format_item(item_id):
+    """
+    Given a string id for a project media, formats for insertion into GraphQL query.
+    :param items_ids: accepts single item id string or nonempty list of item id strings
+    :str return: string-formatted id of item to be fed into query
+    """
+    return repr(item_id).replace("'", '"')

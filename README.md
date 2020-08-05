@@ -18,12 +18,12 @@ pip install gql
 ### Usage
 
 #### Getting Started
-To access the Meedan Check API Python wrapper, make sure you have access to an API key and **owner permissions**. Once you have this API key, you can instantiate a `MeedanAPI` class to work with. Your team slug is found in the Check URL: checkmedia.org/**team-slug**/
+To access the Meedan Check API Python wrapper, make sure you have access to an [API key](https://github.com/meedan/check/wiki/Authentication-and-authorization-on-Check-API) and **owner permissions**. Once you have this API key, you can instantiate a `MeedanAPI` class to work with. Your team slug is found in the Check URL: checkmedia.org/**team-slug**/
 
 ```
 from meedan_interface import MeedanAPI
 
-api_key = os.environ.get('MEEDAN_KEY')
+api_key = os.environ.get("MEEDAN_KEY")
 meedan_api = MeedanAPI(api_key, "team-slug")
 ```
 
@@ -31,7 +31,9 @@ The Python wrapper can access basic Meedan Check API functionality.
 
 #### Adding Videos
 
-**Add a single video** to a particular list *(Note: cannot be added if item already exists in Check)*:
+**Add a single video** to a particular list:
+
+*(Note: cannot be added if item already exists in Check)*
 
 `meedan_api.add_video(uri, list_id)`
 * `uri`: Unique video identifier. Last 11 digits of YouTube URL (ex. "5fQTJ_86IEs" in "youtube.com/watch?v=5fQTJ_86IEs")
@@ -74,7 +76,9 @@ query {
 
 #### Removing Videos
 
-Send a **single video to trash** *(Note: does not remove the video from Check)*:
+Send a **single video to trash**:
+
+*(Note: does not remove the video from Check)*
 
 `meedan_api.trash_video(item_id)`
 * `item_id`: Check's unique item id (returned in dictionary when adding videos) 
@@ -101,11 +105,13 @@ Permanently **delete several videos**:
 #### Collecting Annotations
 
 `meedan_api.collect_annotations(in_trash)`
+
+*(Note: This query may take several minutes to run)*
 * `in_trash`: *Optional* argument to specify whether to collect annotations for items that have been trashed. Default *False*
 * Returns nested dictionary of annotations. Entry format:
 
 ```
-{ uri : { 'status' : verification_status, 'tags' : [tag1, tag2, ...], 'last_updated' : datetime, 'notes' : [note1, note2, ...], 'last_updated_by' : username } }
+{ uri : { "status" : verification_status, "tags" : [tag1, tag2, ...], "last_updated" : datetime, "notes" : [note1, note2, ...], "last_updated_by" : username } }
 ```
 
 ### FAQs
@@ -162,6 +168,27 @@ query {
 ```
 
 **Why am I getting a server error on GQL query?**
+
+Error Code 1:
+* Server connection error
+* *To Solve*: [See Meedan's writeup](https://github.com/meedan/check-api/blob/master/doc/api.md)
+
+Error Code 5:
+
+`"message": "No permission to delete Dynamic"`
+* The user you are running the query with does not have the necessary permissions to mutate the media
+* *To Solve*: See above for instructions to update permissions
+
+`"message": "undefined method 'project' for #<Link:0x00007f34c5919af0>\nDid you mean?  projects\n               projects="`
+* Meedan does not recognize the id entered into the query
+* *To Solve*: Make sure to use the `id` under the ProjectMedia node rather than the `id` under `media`
+
+Error Code 9:
+
+`"message": "This item already exists"`
+* The item you are attempting to add already exists in the project
+* *To Solve*: If necessary to re-add, use `delete_video` to remove the item. Then add again.
+
 
 ### Credits
 Written by Vyoma Raman and Nicole Zhu

@@ -67,12 +67,14 @@ class TestAPI(unittest.TestCase):
         id = self.meedan_api.get_proj_id("#Vyoma")
         self.assertEqual(id, "3135")
 
-    def test_add(self):
-        video_id_dict = self.meedan_api.add_video("XpqqjU7u5Yc", "#Wietske")
-        # response = self.meedan_api.delete_video(list(video_id_dict.values())[0])
-        # print(self.meedan_api.format_item(list(video_id_dict.values())[0]))
+    def test_add_delete(self):
+        video_id_dict = self.meedan_api.add_video("cc91EfoBh8A", "#Wietske")
+        response = self.meedan_api.delete_video(list(video_id_dict.values())[0])
+        self.assertTrue(response)
 
-    def test_add_list(self):
+    def test_add_delete_list(self):
+        response = self.meedan_api.delete_video_list(["UHJvamVjdE1lZGlhLzM5NTA5MA==\n", "UHJvamVjdE1lZGlhLzM5NTA4OQ==\n", "UHJvamVjdE1lZGlhLzM5NTA4OA==\n"])
+        self.assertTrue(response)
         response = self.meedan_api.add_video_list(["XpqqjU7u5Yc", "DqZS89jFCFg", "I_izvAbhExY"], "#Wietske")
         self.assertTrue(response)
 

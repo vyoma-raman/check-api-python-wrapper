@@ -16,8 +16,7 @@ class TestAPI(unittest.TestCase):
 
     def test(self):
         response = self.meedan_api.collect_annotations()
-        print(response)
-        #self.meedan_api.add_video()
+        print(response["I_izvAbhExY"])
 
 if __name__ == '__main__':
     unittest.main()
