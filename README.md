@@ -18,7 +18,9 @@ pip install gql
 ### Usage
 
 #### Getting Started
-To access the Meedan Check API Python wrapper, make sure you have access to an [API key](https://github.com/meedan/check/wiki/Authentication-and-authorization-on-Check-API) and **owner permissions**. Once you have this API key, you can instantiate a `MeedanAPI` class to work with. Your team slug is found in the Check URL: checkmedia.org/**team-slug**/
+To access the Meedan Check API Python wrapper, make sure you have access to an [API key](https://github.com/meedan/check/wiki/Authentication-and-authorization-on-Check-API) and **owner permissions**. You will also need to know your team slug which can be found in the Check URL: checkmedia.org/**team-slug**/
+
+Once you have the API key and team slug, you can instantiate a `MeedanAPI` class to work with.
 
 ```
 from meedan_interface import MeedanAPI
@@ -31,46 +33,41 @@ The Python wrapper can access basic Meedan Check API functionality.
 
 #### Adding Videos
 
-**Add a single video** to a particular list:
+**Add a single video** to a particular list *(Note: A video cannot be added if it already exists in Check)*:
 
-*(Note: cannot be added if item already exists in Check)*
 
-`meedan_api.add_video(uri, list_id)`
+
+```
+meedan_api.add_video(uri, list_id)
+```
 * `uri`: Unique video identifier. Last 11 digits of YouTube URL (ex. "5fQTJ_86IEs" in "youtube.com/watch?v=5fQTJ_86IEs")
-* `list_id`: The name of the list to add the video to, or the corresponding 4 digit id. All list names and ids can be found with the following query
+* `list_id`: The name of the list to add the video to, or the corresponding 4 digit ID. See [FAQ](###FAQs) for more information on finding the ID.
 * Returns a dictionary containing `uri` as the key and Check's unique item id as the value
-
-```
-query {
-  team(slug: "team-slug") {
-    projects {
-      edges {
-        node {
-          title
-          dbid
-        }
-      }
-    }
-  }
-}
-```
 
 **Add several videos** to one list:
 
-`meedan_api.add_video_list(uri_list, list_id)`
+```
+meedan_api.add_video_list(uri_list, list_id)
+```
 * `uri_list`: List of uris. See `uri` description above
 * `list_id`: See description above
 * Returns a dictionary (description above) with a key-value pair for every video in the list
 
+#### Restoring Videos
+
 **Restore a single video** from trash:
 
-`meedan_api.restore_video(item_id)`
+```
+meedan_api.restore_video(item_id)
+```
 * `item_id`: See description above
 * Returns *True*
 
 **Restore several videos** from trash:
 
-`meedan_api.restore_video_list(item_ids)`
+```
+meedan_api.restore_video_list(item_ids)
+```
 * `item_id_list`: See description above
 * Returns *True*
 
@@ -81,7 +78,7 @@ Send a **single video to trash**:
 *(Note: does not remove the video from Check)*
 
 `meedan_api.trash_video(item_id)`
-* `item_id`: Check's unique item id (returned in dictionary when adding videos) 
+* `item_id`: Check's unique item id (returned in dictionary when adding videos)
 * Returns *True*
 
 Send **several videos to trash**:
@@ -115,11 +112,29 @@ Permanently **delete several videos**:
 ```
 
 ### FAQs
+
+**How can I find the corresponding ID of my list?**
+
+All list names and ids can be found with the following query:
+
+```
+query {
+  team(slug: "team-slug") {
+    projects {
+      edges {
+        node {
+          title
+          dbid
+        }
+      }
+    }
+  }
+}
+```
+
 **How can I run a query?**
 
 To run your own queries, use either [Check's GraphiQL](https://check-api.checkmedia.org/graphiql) (must have CloudFlare access) or the `execute` function within this package.
-
-*Execute*
 
 This function is not intended for significant user interaction and is best for running simple queries to access id information and user permissions. It returns the API response as a dictionary.
 
@@ -167,7 +182,7 @@ query {
 }
 ```
 
-**Why am I getting a server error on GQL query?**
+**Why am I getting a server error code on GQL query?**
 
 Error Code 1:
 * Server connection error

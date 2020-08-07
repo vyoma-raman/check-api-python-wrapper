@@ -141,7 +141,8 @@ class MeedanAPI:
         :str item_id: id of item to trash
         :bool return: result of calling update_video with specified arguments
         """
-        return self.update_video(item_id, 1)
+        self.update_video(item_id, 1)
+        print("Item ID " + item_id + " has been sent to trash.")
 
     # USER-FACING FUNCTION
 
@@ -151,7 +152,8 @@ class MeedanAPI:
         :str item_id: id of item to restore
         :bool return: result of calling update_video specified arguments
         """
-        return self.update_video(item_id, 0)
+        self.update_video(item_id, 0)
+        print("Item with ID " + item_id + " has been restored.")
 
     # USER-FACING FUNCTION
 
@@ -167,13 +169,14 @@ class MeedanAPI:
             id: %s
           }) { deletedId }
         }''' % (util.format_item(item_id))
-        response = None
         try:
-            response = self.execute(query_string)
+            self.execute(query_string)
+            print("Item " + item_id + " has been deleted")
         except:
+            # If item is in trash, attempts to restore video first before deleting
             self.restore_video(item_id)
-            response = self.execute(query_string)
-        return response["destroyProjectMedia"]["deletedId"] == item_id
+            self.execute(query_string)
+            print("Item " + item_id + " has been deleted")
 
     # USER-FACING FUNCTION
 
@@ -219,7 +222,7 @@ class MeedanAPI:
         :list item_id_list: list of ids of videos to trash
         :bool return: result of calling mutate_video_list with specified arguments
         """
-        return self.mutate_video_list(item_id_list, self.trash_video)
+        self.mutate_video_list(item_id_list, self.trash_video)
 
     # USER-FACING FUNCTION
 
@@ -229,7 +232,7 @@ class MeedanAPI:
         :list item_id_list: list of ids of videos to restore
         :bool return: result of calling mutate_video_list with specified arguments
         """
-        return self.mutate_video_list(item_id_list, self.restore_video)
+        self.mutate_video_list(item_id_list, self.restore_video)
 
     # USER-FACING FUNCTION
 
