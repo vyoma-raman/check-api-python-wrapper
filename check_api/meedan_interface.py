@@ -110,6 +110,7 @@ class MeedanAPI:
         response = self.execute(query_string)
         video_data = response["createProjectMedia"]["project_media"]
         video_id = video_data["id"]
+        print("Video '" + uri + "' has been added and assigned item ID " + video_id + ".")
         return {uri: video_id}
 
     # HELPER FUNCTION
@@ -210,9 +211,7 @@ class MeedanAPI:
         if len(item_id_list) == 0:
             raise Exception("Please specify item(s) to mutate.")
         for item_id in item_id_list:
-            success = function(item_id)
-            assert success, "Mutation could not be performed for item_id " + util.format_item(item_id) + "."
-        return True
+            function(item_id)
 
     # USER-FACING FUNCTION
 

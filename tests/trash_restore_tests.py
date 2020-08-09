@@ -14,16 +14,10 @@ class TestAPI(unittest.TestCase):
 
     #TODO: Finish fleshing out tests once method is completed
     def test_trash_restore(self):
-        response = self.meedan_api.trash_video("UHJvamVjdE1lZGlhLzM5NTA5MA==\n")
-        self.assertTrue(response)
-        response = self.meedan_api.restore_video("UHJvamVjdE1lZGlhLzM5NTA5MA==\n")
-        self.assertTrue(response)
-
+        self.meedan_api.trash_video("UHJvamVjdE1lZGlhLzM5NTEwMA==\n")
+        self.meedan_api.restore_video("UHJvamVjdE1lZGlhLzM5NTEwMA==\n")
     def test_trash_restore_list(self):
-        response = self.meedan_api.trash_video_list(["UHJvamVjdE1lZGlhLzM5NTA5MA==\n", "UHJvamVjdE1lZGlhLzM5NTA4OQ==\n", "UHJvamVjdE1lZGlhLzM5NTA4OA==\n"])
-        self.assertTrue(response)
-        response = self.meedan_api.restore_video_list(["UHJvamVjdE1lZGlhLzM5NTA5MA==\n", "UHJvamVjdE1lZGlhLzM5NTA4OQ==\n", "UHJvamVjdE1lZGlhLzM5NTA4OA==\n"])
-        self.assertTrue(response)
-
+        self.meedan_api.trash_video_list(["UHJvamVjdE1lZGlhLzM5NTEwMA==\n", "UHJvamVjdE1lZGlhLzM5NTA5OA==\n"])
+        self.meedan_api.restore_video_list(["UHJvamVjdE1lZGlhLzM5NTEwMA==\n", "UHJvamVjdE1lZGlhLzM5NTA5OA==\n"])
 if __name__ == '__main__':
     unittest.main()

@@ -36,7 +36,6 @@ The Python wrapper can access basic Meedan Check API functionality.
 **Add a single video** to a particular list *(Note: A video cannot be added if it already exists in Check)*:
 
 
-
 ```
 meedan_api.add_video(uri, list_id)
 ```
@@ -73,9 +72,7 @@ meedan_api.restore_video_list(item_ids)
 
 #### Removing Videos
 
-Send a **single video to trash**:
-
-*(Note: does not remove the video from Check)*
+Send a **single video to trash** *(Note: does not remove the video from Check)*:
 
 `meedan_api.trash_video(item_id)`
 * `item_id`: Check's unique item id (returned in dictionary when adding videos)
@@ -92,6 +89,7 @@ Permanently **delete single video**:
 `meedan_api.delete_video(item_id)`
 * `item_id`: See description above
 * Returns *True*
+* In rare cases, this query may experience issues deleting media that have been trashed. If so, simply restore the media in question and try again
 
 Permanently **delete several videos**:
 
@@ -113,9 +111,20 @@ Permanently **delete several videos**:
 
 ### FAQs
 
+**How can I run a query?**
+
+To run your own queries, use either [Check's GraphiQL](https://check-api.checkmedia.org/graphiql) (must have CloudFlare access) or the `execute` function within this package.
+
+This function is not intended for significant user interaction and is best for running simple queries to access id information and user permissions. It returns the API response as a dictionary.
+
+```
+query_string = """ insert query here """
+meedan_api.execute(query_string)
+```
+
 **How can I find the corresponding ID of my list?**
 
-All list names and ids can be found with the following query:
+All list names and ids can be found by running the following query:
 
 ```
 query {
@@ -132,20 +141,9 @@ query {
 }
 ```
 
-**How can I run a query?**
-
-To run your own queries, use either [Check's GraphiQL](https://check-api.checkmedia.org/graphiql) (must have CloudFlare access) or the `execute` function within this package.
-
-This function is not intended for significant user interaction and is best for running simple queries to access id information and user permissions. It returns the API response as a dictionary.
-
-```
-query_string = """ insert query here """
-meedan_api.execute(query_string)
-```
-
 **How can I update my permissions?**
 
-Have a member of your project who has owner permissions run the following mutation.
+Have a member of your project who has owner permissions run the following mutation:
 
 ```
 mutation {
@@ -162,7 +160,7 @@ mutation {
 }
 ```
 
-Current user permissions and team user ids can be found by running the following query.
+Current user permissions and team user ids can be found by running the following query:
 
 ```
 query {
@@ -190,11 +188,11 @@ Error Code 1:
 
 Error Code 5:
 
-`"message": "No permission to delete Dynamic"`
+`"message": "No permission to update/delete Dynamic"`
 * The user you are running the query with does not have the necessary permissions to mutate the media
 * *To Solve*: See above for instructions to update permissions
 
-`"message": "undefined method 'project' for #<Link:0x00007f34c5919af0>\nDid you mean?  projects\n               projects="`
+`"message": "undefined method 'project' for #<Link:0x00007f34c5919af0>\nDid you mean? projects\n projects="`
 * Meedan does not recognize the id entered into the query
 * *To Solve*: Make sure to use the `id` under the ProjectMedia node rather than the `id` under `media`
 
