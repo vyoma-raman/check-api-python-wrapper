@@ -9,15 +9,15 @@ This is a Python wrapper for the [Meedan Check API](https://github.com/meedan/ch
 * [Frequently Asked Questions](###FAQ)
 * [Credits](###Credits)
 
-### Dependencies
+## Dependencies
 To use this Python package, make sure the [GraphQL Python Client (gql)](https://pypi.org/project/gql/) is installed.
 ```
 pip install gql
 ```
 
-### Usage
+## Usage
 
-#### Getting Started
+### Getting Started
 To access the Meedan Check API Python wrapper, make sure you have access to an [API key](https://github.com/meedan/check/wiki/Authentication-and-authorization-on-Check-API) and **owner permissions**. You will also need to know your team slug which can be found in the Check URL: checkmedia.org/**team-slug**/
 
 Once you have the API key and team slug, you can instantiate a `MeedanAPI` class to work with.
@@ -31,7 +31,7 @@ meedan_api = MeedanAPI(api_key, "team-slug")
 
 The Python wrapper can access basic Meedan Check API functionality.
 
-#### Adding Videos
+### Adding Videos
 
 **Add a single video** to a particular list *(Note: A video cannot be added if it already exists in Check)*:
 
@@ -52,7 +52,7 @@ meedan_api.add_video_list(uri_list, list_id)
 * `list_id`: See description above
 * Returns a dictionary (description above) with a key-value pair for every video in the list
 
-#### Restoring Videos
+### Restoring Videos
 
 **Restore a single video** from trash:
 
@@ -70,7 +70,7 @@ meedan_api.restore_video_list(item_ids)
 * `item_id_list`: See description above
 * Prints confirmation after successfully restoring each video
 
-#### Removing Videos
+### Removing Videos
 
 Send a **single video to trash** *(Note: does not remove the video from Check)*:
 
@@ -97,7 +97,7 @@ Permanently **delete several videos**:
 * `item_id_list`: See description above
 * Prints confirmation after successfully deleting each video
 
-#### Collecting Annotations
+### Collecting Annotations
 
 `meedan_api.collect_annotations(in_trash)`
 
@@ -109,7 +109,7 @@ Permanently **delete several videos**:
 { uri : { "status" : verification_status, "tags" : [tag1, tag2, ...], "last_updated" : datetime, "notes" : [note1, note2, ...], "last_updated_by" : username } }
 ```
 
-### FAQs
+## FAQs
 
 **How can I run a query?**
 
@@ -203,5 +203,5 @@ Error Code 9:
 * *To Solve*: If necessary to re-add, use `delete_video` to remove the item. Then add again.
 
 
-### Credits
+## Credits
 Written by Vyoma Raman and Nicole Zhu
