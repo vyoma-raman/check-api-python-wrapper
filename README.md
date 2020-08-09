@@ -60,7 +60,7 @@ meedan_api.add_video_list(uri_list, list_id)
 meedan_api.restore_video(item_id)
 ```
 * `item_id`: See description above
-* Returns *True*
+* Prints confirmation after successfully restoring the video
 
 **Restore several videos** from trash:
 
@@ -68,7 +68,7 @@ meedan_api.restore_video(item_id)
 meedan_api.restore_video_list(item_ids)
 ```
 * `item_id_list`: See description above
-* Returns *True*
+* Prints confirmation after successfully restoring each video
 
 #### Removing Videos
 
@@ -76,26 +76,26 @@ Send a **single video to trash** *(Note: does not remove the video from Check)*:
 
 `meedan_api.trash_video(item_id)`
 * `item_id`: Check's unique item id (returned in dictionary when adding videos)
-* Returns *True*
+* Prints confirmation after successfully trashing the video
 
 Send **several videos to trash**:
 
 `meedan_api.trash_video_list(item_ids)`
 * `item_id_list`: List of item ids. See `item_id` description above
-* Returns *True*
+* Prints confirmation after successfully trashing each video
 
 Permanently **delete single video**:
 
 `meedan_api.delete_video(item_id)`
 * `item_id`: See description above
-* Returns *True*
+* Prints confirmation after successfully deleting the video
 * In rare cases, this query may experience issues deleting media that have been trashed. If so, simply restore the media in question and try again
 
 Permanently **delete several videos**:
 
 `meedan_api.delete_video_list(item_ids)`
 * `item_id_list`: See description above
-* Returns *True*
+* Prints confirmation after successfully deleting each video
 
 #### Collecting Annotations
 
