@@ -4,10 +4,10 @@
 This is a Python wrapper for the [Meedan Check API](https://github.com/meedan/check-api).
 
 ## Table of Contents
-* [Dependencies](##Dependencies)
-* [Usage](##Usage)
-* [Frequently Asked Questions](##FAQ)
-* [Credits](##Credits)
+* [Dependencies](#Dependencies)
+* [Usage](#Usage)
+* [Frequently Asked Questions](#FAQ)
+* [Credits](#Credits)
 
 ## Dependencies
 To use this Python package, make sure the [GraphQL Python Client (gql)](https://pypi.org/project/gql/) is installed.
